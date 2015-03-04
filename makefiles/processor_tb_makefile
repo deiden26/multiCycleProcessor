@@ -1,0 +1,54 @@
+#Variables for ifu test bench
+TARGET_FIB = ../executables/processor_fib_tb.exe
+TARGET_SUM = ../executables/processor_sum_tb.exe
+TARGET_SORT = ../executables/processor_sort_tb.exe
+
+VERILOG_COMPONENTS = ../components/*.v ../components/*.vh
+
+VERILOG_TEST_FIB =  ../tests/processor_fib_tb.v
+VERILOG_TEST_SUM =  ../tests/processor_sum_tb.v
+VERILOG_TEST_SORT =  ../tests/processor_sort_tb.v
+
+FIRST_COMPONENT = processor_tb
+
+TARGETS = ${TARGET_FIB} ${TARGET_SUM} ${TARGET_SORT}
+VERILOG_TESTS = ${VERILOG_TEST_FIB} ${VERILOG_TEST_SUM} ${VERILOG_TEST_SORT}
+
+#Variables for asm hex
+DLXASM = ../scripts/dlxasm
+
+ASM_FIB = ../tests/fib.asm
+HEX_DATA_FIB = ../tests/fib_data.hex
+HEX_INSTR_FIB = ../tests/fib_instr.hex
+HEX_FILES_FIB = ${HEX_DATA_FIB} ${HEX_INSTR_FIB}
+
+ASM_SUM = ../tests/unsignedsum.asm
+HEX_DATA_SUM = ../tests/sum_data.hex
+HEX_INSTR_SUM = ../tests/sum_instr.hex
+HEX_FILES_SUM = ${HEX_DATA_SUM} ${HEX_INSTR_SUM}
+
+ASM_SORT = ../tests/quicksort.asm
+HEX_DATA_SORT = ../tests/sort_data.hex
+HEX_INSTR_SORT = ../tests/sort_instr.hex
+HEX_FILES_SORT = ${HEX_DATA_SORT} ${HEX_INSTR_SORT}
+
+HEX_FILES = ${HEX_DATA_FIB} ${HEX_FILES_SUM} ${HEX_FILES_SORT}
+ASM = ${ASM_FIB} ${ASM_SUM} ${ASM_SORT}
+
+default: ${TARGET_FIB} ${HEX_FILES};
+# Generate executable ifu test benches
+${TARGETS} : ${VERILOG_COMPONENTS} ${VERILOG_TESTS};
+	iverilog -g2009 -o ${TARGET_FIB} -s ${FIRST_COMPONENT} ${VERILOG_COMPONENTS} ${VERILOG_TEST_FIB}
+	iverilog -g2009 -o ${TARGET_SUM} -s ${FIRST_COMPONENT} ${VERILOG_COMPONENTS} ${VERILOG_TEST_SUM}
+	iverilog -g2009 -o ${TARGET_SORT} -s ${FIRST_COMPONENT} ${VERILOG_COMPONENTS} ${VERILOG_TEST_SORT}
+
+# Generate Verilog-friendly hex files from an ASM file
+${HEX_FILES}: ${DLXASM} ${ASM};
+	${DLXASM} -D ${HEX_DATA_FIB} -C ${HEX_INSTR_FIB} ${ASM_FIB}
+	${DLXASM} -D ${HEX_DATA_SUM} -C ${HEX_INSTR_SUM} ${ASM_SUM}
+	${DLXASM} -D ${HEX_DATA_SORT} -C ${HEX_INSTR_SORT} ${ASM_SORT}
+	rm -f ${ASM_FIB}.exe ${ASM_SUM}.exe ${ASM_SORT}.exe
+
+.PHONY: clean
+clean: ;
+	rm -f ${TARGETS} ${HEX_FILES}

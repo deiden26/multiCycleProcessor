@@ -1,0 +1,25 @@
+#Variables for ifu test bench
+TARGET = ../executables/dmem_tb.exe
+VERILOG_INPUTS = ../components/dmem.v ../tests/dmem_tb.v
+FIRST_COMPONENT = dmem_tb
+
+#Variables for asm hex
+ASM = ../tests/test_asm.s
+HEX_DATA = ../tests/data.hex
+HEX_INSTR= ../tests/instr.hex
+DLXASM = ../scripts/dlxasm
+HEX_FILES = ${HEX_DATA} ${HEX_INSTR}
+
+default: ${TARGET} ${HEX_FILES};
+# Generate executable ifu test bench
+${TARGET}: ${VERILOG_INPUTS};
+	iverilog -o ${TARGET} -s ${FIRST_COMPONENT} ${VERILOG_INPUTS}
+
+# Generate Verilog-friendly hex files from an ASM file
+${HEX_FILES}: ${DLXASM} ${ASM} ;
+	${DLXASM} -D ${HEX_DATA} -C ${HEX_INSTR} ${ASM}
+	rm -f ${ASM}.exe
+
+.PHONY: clean
+clean: ;
+	rm -f ${TARGET} ${HEX_FILES}
