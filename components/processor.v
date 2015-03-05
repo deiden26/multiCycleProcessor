@@ -15,82 +15,143 @@ module processor(
 	 input [0:31]inst_from_mem
 );
 
-	wire gp_branch, fp_branch, jump, jump_use_reg, branch, fpu_ctrl_bits, write_enable, mem_to_reg, mov_instr, mem_byte, mem_half_word, mem_sign_extend, jal_instr;
-	wire [0:31] bus_b, pc_plus_8, instr, bus_w, fbus_w, operand_a, operand_b, f_operand_a, f_operand_b, alu_out, fpu_out, mem_data;
-	wire [0:3] alu_ctrl_bits;
+	logic
+		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg,
+		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg,
+		ex_fpu_ctrl_bits,
+		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend,
+		wb_jal_instr, wb_mem_to_reg, wb_mov_instr;
 
-	//initial
-		//$monitor("Clock=%b \t PC=%x \t Instruction=%x \t addr=%x \t data_from_mem=%d \t data_to_mem=%d \t bus_a=%x \t bus_b=%x \t bus_w=%d",
-		//	clock, iaddr, inst_from_mem, addr_to_mem, data_from_mem, data_to_mem, operand_a, operand_b, bus_w);
+	logic [0:31]
+		if_operand_a, if_pc_plus_8, if_instr,
+		id_instr,id_operand_a, id_operand_b, 
+		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_gp_branch, ex_fp_branch,
+		mem_alu_out, mem_bus_b, mem_f_operand_b, mem_mem_data,
+		wb_alu_out, wb_fpu_out, wb_operand_a, wb_mem_data, wb_pc_plus_8,
+		bus_w, fbus_w;
+
+	logic [0:3]
+		id_alu_ctrl_bits,
+		ex_alu_ctrl_bits;
 
 	ifu IFU(
 		.clock (clock),                  // system clock
 		.reset (reset),                  // system reset
-		.branch (branch),
-		.gp_branch (gp_branch),              // taken-branch signal for alu
-		.fp_branch (fp_branch),              // taken-branch signal for fpu 
-		.jump (jump),                   // jump signal
-		.use_reg (jump_use_reg),                // if JR or JALR
-		.pc_from_reg (operand_a),            // use if use_reg is TRUE
+		.branch (if_branch),
+		.gp_branch (if_gp_branch),              // taken-branch signal for alu
+		.fp_branch (if_fp_branch),              // taken-branch signal for fpu 
+		.jump (if_jump),                   // jump signal
+		.use_reg (if_jump_use_reg),                // if JR or JALR
+		.pc_from_reg (if_operand_a),            // use if use_reg is TRUE
 		.inst_from_mem (inst_from_mem),          // Data coming back from instruction-memory
 
 		.pc_to_mem (iaddr),              // Address sent to Instruction memory
-		.pc_8_out (pc_plus_8),               // PC of to store in reg31 for JAL & JALR (PC+8)
-		.inst_out (instr)               // fetched instruction out
+		.pc_8_out (if_pc_plus_8),               // PC of to store in reg31 for JAL & JALR (PC+8)
+		.inst_out (if_instr)               // fetched instruction out
 	);
+
+	always(posedge clock) begin
+		id_instr <= if_instr;
+		id_pc_plus_8 <= if_pc_plus_8;
+	end
 
 	ID_Stage ID(
 		.clk(clock),
 		.reset(reset),
-		.instruction(instr),
+		.instruction(id_instr),
 		.BUS_W(bus_w),
 		.FBUS_W(fbus_w),
-		.OPERAND_A(operand_a),
-		.OPERAND_B(operand_b),
-		.BUS_B(bus_b),
-		.F_OPERAND_A(f_operand_a),
-		.F_OPERAND_B(f_operand_b),
-		.BRANCH(branch),
-		.JUMP(jump),
-		.ALU_CTRL_BITS(alu_ctrl_bits),
-		.FPU_CTRL_BITS(fpu_ctrl_bits),
-		.MEM_WR(write_enable),
-		.MEM_TO_REG(mem_to_reg),
-		.MOV_INSTR(mov_instr),
-		.MEM_BYTE_OP(mem_byte),
-		.MEM_HALFWORD_OP(mem_half_word),
-		.MEM_SIGN_EXT(mem_sign_extend),
-		.JAL_INSTR(jal_instr),
-		.JUMP_USE_REG(jump_use_reg)
+		.OPERAND_A(id_operand_a),
+		.OPERAND_B(id_operand_b),
+		.BUS_B(id_bus_b),
+		.F_OPERAND_A(id_f_operand_a),
+		.F_OPERAND_B(id_f_operand_b),
+		.BRANCH(id_branch),
+		.JUMP(id_jump),
+		.ALU_CTRL_BITS(id_alu_ctrl_bits),
+		.FPU_CTRL_BITS(id_fpu_ctrl_bits),
+		.MEM_WR(id_write_enable),
+		.MEM_TO_REG(id_mem_to_reg),
+		.MOV_INSTR(id_mov_instr),
+		.MEM_BYTE_OP(id_mem_byte),
+		.MEM_HALFWORD_OP(id_mem_half_word),
+		.MEM_SIGN_EXT(id_mem_sign_extend),
+		.JAL_INSTR(id_jal_instr),
+		.JUMP_USE_REG(id_jump_use_reg)
 	);
+
+	always(posedge clock) begin
+		ex_operand_a <= id_operand_a;
+		if_operand_a <= id_operand_a;
+		ex_operand_b <= id_operand_b;
+		ex_bus_b <= id_bus_b;
+		ex_f_operand_a <= id_f_operand_a;
+		ex_f_operand_b <= id_f_operand_b;
+		ex_branch <= id_branch;
+		if_jump <= id_jump;
+		ex_alu_ctrl_bits <= id_alu_ctrl_bits;
+		ex_fpu_ctrl_bits <= id_fpu_ctrl_bits;
+		ex_write_enable <= id_write_enable;
+		ex_mem_to_reg <= id_mem_to_reg;
+		ex_mov_instr <= id_mov_instr;
+		ex_mem_byte <= id_mem_byte;
+		ex_mem_half_word <= id_mem_half_word;
+		ex_mem_sign_extend <= id_mem_sign_extend;
+		ex_jal_instr <= id_jal_instr;
+		if_jump_use_reg <= id_jump_use_reg;
+
+		ex_pc_plus_8 <= if_pc_plus_8;
+	end
+		
 	
 	alufpu ALUFPU(
-		.busA(operand_a),
-		.busB(operand_b),
-		.ALUctrl(alu_ctrl_bits),
-		.fbusA(f_operand_a),
-		.fbusB(f_operand_b),
-		.FPUctrl(fpu_ctrl_bits),
-		.ALUout(alu_out),
-		.FPUout(fpu_out),
-		.gp_branch(gp_branch),
-		.fp_branch(fp_branch)
+		.busA(ex_operand_a),
+		.busB(ex_operand_b),
+		.ALUctrl(ex_alu_ctrl_bits),
+		.fbusA(ex_f_operand_a),
+		.fbusB(ex_f_operand_b),
+		.FPUctrl(ex_fpu_ctrl_bits),
+		.ALUout(ex_alu_out),
+		.FPUout(ex_fpu_out),
+		.gp_branch(ex_gp_branch),
+		.fp_branch(ex_fp_branch)
 	);
 
 
+	always(posedge clock) begin
+		mem_alu_out <= ex_alu_out;
+		mem_fpu_out <= ex_fpu_out;
+		if_gp_branch <= ex_gp_branch;
+		if_fp_branch <= ex_fp_branch;
 
-//*************NEEDS FIXING: currently can't pass Rd value over to memory write, only passes operand b currently
+		mem_operand_a <= ex_operand_a;
+		mem_f_operand_a <= ex_f_operand_a;
+		mem_bus_b <= ex_bus_b;
+		mem_f_operand_b <= ex_f_operand_b;
+		mem_write_enable <= ex_write_enable;
+		mem_mem_byte <= ex_mem_byte;
+		mem_mem_half_word <= ex_mem_half_word;
+		mem_mem_sign_extend <= ex_mem_sign_extend;
+		mem_jal_instr <= ex_jal_instr;
+		mem_mem_to_reg <= ex_mem_to_reg;
+		mem_mov_instr <= ex_mov_instr;
+		if_branch <= ex_branch;
+
+		mem_pc_plus_8 <= ex_pc_plus_8;
+	end
+
+
 	mem_stage MEM(
 		.store_fp(1'b0),
 		//Connections to processor
-		.addr_from_proc(alu_out),
-		.gp_data_from_proc(bus_b),
-		.fp_data_from_proc(f_operand_b),
-		.write_enable_from_proc(write_enable),
-		.byte_from_proc(mem_byte),
-		.half_word_from_proc(mem_half_word),
-		.sign_extend_from_proc(mem_sign_extend),
-		.data_to_proc(mem_data),
+		.addr_from_proc(mem_alu_out),
+		.gp_data_from_proc(mem_bus_b),
+		.fp_data_from_proc(mem_f_operand_b),
+		.write_enable_from_proc(mem_write_enable),
+		.byte_from_proc(mem_mem_byte),
+		.half_word_from_proc(mem_mem_half_word),
+		.sign_extend_from_proc(mem_mem_sign_extend),
+		.data_to_proc(mem_mem_data),
 
 		//Connections to memory
 		.addr_to_mem(addr_to_mem),
@@ -102,18 +163,32 @@ module processor(
 		.data_from_mem(data_from_mem)
 	);
 
+
+	always(posedge clock) begin
+		wb_mem_data <= mem_mem_data;
+
+		wb_alu_out <= mem_alu_out;
+		wb_fpu_out <= mem_fpu_out;
+		wb_operand_a <= mem_operand_a;
+		wb_f_operand_a <= mem_f_operand_a;
+		wb_jal_instr <= mem_jal_instr;
+		wb_mem_to_reg <= mem_mem_to_reg;
+		wb_pc_plus_8 <= mem_pc_plus_8;
+	end
+
 	wb WB(
-		.ALUout(alu_out),
-		.FPUout(fpu_out),
-		.busA(operand_a),
-		.fbusA(f_operand_a),
-		.MEMout(mem_data),
+		.ALUout(wb_alu_out),
+		.FPUout(wb_fpu_out),
+		.busA(wb_operand_a),
+		.fbusA(wb_f_operand_a),
+		.MEMout(wb_mem_data),
 		.busW(bus_w),
 		.fbusW(fbus_w),
-		.busWctrl(jal_instr),
-		.memToReg(mem_to_reg),
-		.movInstr(mov_instr),
-		.jalOut(pc_plus_8)
+		.busWctrl(wb_jal_instr),
+		.memToReg(wb_mem_to_reg),
+		.movInstr(wb_mov_instr),
+		.jalOut(wb_pc_plus_8)
 	);
-	
+
+
 endmodule
