@@ -1,11 +1,11 @@
 module alufputest;
         reg [31:0] BUSA, BUSB, FBUSA, FBUSB;
 	reg [3:0] ALUCTRL;
-        reg FPUCTRL;
+        reg FPUCTRL, ISMULT;
         wire [31:0] FPUOUT, ALUOUT;
 	wire GP_BRANCH, FP_BRANCH;
 
-        alufpu ALUFPU(.busA(BUSA), .busB(BUSB), .ALUctrl(ALUCTRL), .fbusA(FBUSA), .fbusB(FBUSB), .FPUctrl(FPUCTRL), .ALUout(ALUOUT), .FPUout(FPUOUT), .gp_branch(GP_BRANCH), .fp_branch(FP_BRANCH));
+        alufpu ALUFPU(.busA(BUSA), .busB(BUSB), .ALUctrl(ALUCTRL), .fbusA(FBUSA), .fbusB(FBUSB), .FPUctrl(FPUCTRL), .isMult(ISMULT), .ALUout(ALUOUT), .FPUout(FPUOUT), .gp_branch(GP_BRANCH), .fp_branch(FP_BRANCH));
 
        initial begin
         $monitor("FBUSA = %d FBUSB = %d FPUCTRL = %b FPUOUT = %d", FBUSA, FBUSB, FPUCTRL, FPUOUT);
@@ -25,7 +25,7 @@ module alufputest;
 //	#1 BUSA=40;
 //	#1 BUSB=32; ALUCTRL=14;
 
-	#0 FBUSA=2; FBUSB=8; FPUCTRL=0;
+	#0 FBUSA=2; FBUSB=8; FPUCTRL=0; ISMULT=1;
 	#1 FBUSB=-8;
 	#1 FPUCTRL=1;
 	#1 FBUSA=35;

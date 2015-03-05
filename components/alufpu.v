@@ -1,7 +1,7 @@
-module alufpu(busA, busB, ALUctrl, fbusA, fbusB, FPUctrl, ALUout, FPUout, gp_branch, fp_branch);
+module alufpu(busA, busB, ALUctrl, fbusA, fbusB, FPUctrl, isMult, ALUout, FPUout, gp_branch, fp_branch);
 	input [0:31] busA, busB, fbusA, fbusB;
 	input [0:3] ALUctrl;
-	input FPUctrl;
+	input FPUctrl, isMult;
 
 	output [0:31] ALUout, FPUout;
 	output reg gp_branch, fp_branch;
@@ -87,6 +87,9 @@ module alufpu(busA, busB, ALUctrl, fbusA, fbusB, FPUctrl, ALUout, FPUout, gp_bra
 	//FPU output
 	always@(*)
         begin
+
+        if (isMult) begin
+
         //multOut <= fbusA * fbusB;
         pp0 <= {(fbusA[0]&fbusB[31]), 31'b0};
         pp1 <= {(fbusA[1]&fbusB[30]), (fbusA[1]&fbusB[31]), 30'b0};
@@ -135,6 +138,8 @@ module alufpu(busA, busB, ALUctrl, fbusA, fbusB, FPUctrl, ALUout, FPUout, gp_bra
                 FPUout <= multuOut;
 
         fp_branch = 0;
+
+        end
         
         end
 endmodule
