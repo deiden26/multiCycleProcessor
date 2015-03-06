@@ -51,8 +51,14 @@ module processor(
 	);
 
 	always(posedge clock) begin
-		id_instr <= if_instr;
-		id_pc_plus_8 <= if_pc_plus_8;
+		if (reset) begin
+			id_instr <= 32'b0;
+			id_pc_plus_8 <= 32'b0;
+		end
+		else begin
+			id_instr <= if_instr;
+			id_pc_plus_8 <= if_pc_plus_8;
+		end
 	end
 
 	ID_Stage ID(
@@ -81,26 +87,50 @@ module processor(
 	);
 
 	always(posedge clock) begin
-		ex_operand_a <= id_operand_a;
-		if_operand_a <= id_operand_a;
-		ex_operand_b <= id_operand_b;
-		ex_bus_b <= id_bus_b;
-		ex_f_operand_a <= id_f_operand_a;
-		ex_f_operand_b <= id_f_operand_b;
-		ex_branch <= id_branch;
-		ex_jump <= id_jump;
-		ex_alu_ctrl_bits <= id_alu_ctrl_bits;
-		ex_fpu_ctrl_bits <= id_fpu_ctrl_bits;
-		ex_write_enable <= id_write_enable;
-		ex_mem_to_reg <= id_mem_to_reg;
-		ex_mov_instr <= id_mov_instr;
-		ex_mem_byte <= id_mem_byte;
-		ex_mem_half_word <= id_mem_half_word;
-		ex_mem_sign_extend <= id_mem_sign_extend;
-		ex_jal_instr <= id_jal_instr;
-		if_jump_use_reg <= id_jump_use_reg;
+		if(reset) begin
+			ex_operand_a <= 32'b0;
+			if_operand_a <= 32'b0;
+			ex_operand_b <= 32'b0;
+			ex_bus_b <= 32'b0;
+			ex_f_operand_a <= 32'b0;
+			ex_f_operand_b <= 32'b0;
+			ex_branch <= 1'b0;
+			ex_jump <= 1'b0;
+			ex_alu_ctrl_bits <= 2'b0;
+			ex_fpu_ctrl_bits <= 1'b0;
+			ex_write_enable <= 1'b0;
+			ex_mem_to_reg <= 1'b0;
+			ex_mov_instr <= 1'b0;
+			ex_mem_byte <= 1'b0;
+			ex_mem_half_word <= 1'b0;
+			ex_mem_sign_extend <= 1'b0;
+			ex_jal_instr <= 1'b0;
+			if_jump_use_reg <= 1'b0;
 
-		ex_pc_plus_8 <= id_pc_plus_8;
+			ex_pc_plus_8 <= 32'b0;
+		end
+		else begin
+			ex_operand_a <= id_operand_a;
+			if_operand_a <= id_operand_a;
+			ex_operand_b <= id_operand_b;
+			ex_bus_b <= id_bus_b;
+			ex_f_operand_a <= id_f_operand_a;
+			ex_f_operand_b <= id_f_operand_b;
+			ex_branch <= id_branch;
+			ex_jump <= id_jump;
+			ex_alu_ctrl_bits <= id_alu_ctrl_bits;
+			ex_fpu_ctrl_bits <= id_fpu_ctrl_bits;
+			ex_write_enable <= id_write_enable;
+			ex_mem_to_reg <= id_mem_to_reg;
+			ex_mov_instr <= id_mov_instr;
+			ex_mem_byte <= id_mem_byte;
+			ex_mem_half_word <= id_mem_half_word;
+			ex_mem_sign_extend <= id_mem_sign_extend;
+			ex_jal_instr <= id_jal_instr;
+			if_jump_use_reg <= id_jump_use_reg;
+
+			ex_pc_plus_8 <= id_pc_plus_8;
+		end
 	end
 		
 	
@@ -119,26 +149,50 @@ module processor(
 
 
 	always(posedge clock) begin
-		mem_alu_out <= ex_alu_out;
-		mem_fpu_out <= ex_fpu_out;
-		if_gp_branch <= ex_gp_branch;
-		if_fp_branch <= ex_fp_branch;
+		if(resetl) begin
+			mem_alu_out <= 32'b0;
+			mem_fpu_out <= 32'b0;
+			if_gp_branch <= 1'b0;
+			if_fp_branch <= 1'b0;
 
-		mem_operand_a <= ex_operand_a;
-		mem_f_operand_a <= ex_f_operand_a;
-		mem_bus_b <= ex_bus_b;
-		mem_f_operand_b <= ex_f_operand_b;
-		mem_write_enable <= ex_write_enable;
-		mem_mem_byte <= ex_mem_byte;
-		mem_mem_half_word <= ex_mem_half_word;
-		mem_mem_sign_extend <= ex_mem_sign_extend;
-		mem_jal_instr <= ex_jal_instr;
-		mem_mem_to_reg <= ex_mem_to_reg;
-		mem_mov_instr <= ex_mov_instr;
-		if_branch <= ex_branch;
-		if_jump <= ex_jump;
+			mem_operand_a <= 32'b0;
+			mem_f_operand_a <= 32'b0;
+			mem_bus_b <= 32'b0;
+			mem_f_operand_b <= 32'b0;
+			mem_write_enable <= 1'b0;
+			mem_mem_byte <= 1'b0;
+			mem_mem_half_word <= 1'b0;
+			mem_mem_sign_extend <= 1'b0;
+			mem_jal_instr <= 1'b0;
+			mem_mem_to_reg <= 1'b0;
+			mem_mov_instr <= 1'b0;
+			if_branch <= 1'b0;
+			if_jump <= 1'b0;
 
-		mem_pc_plus_8 <= ex_pc_plus_8;
+			mem_pc_plus_8 <= 32'b0;
+		end
+		else begin
+			mem_alu_out <= ex_alu_out;
+			mem_fpu_out <= ex_fpu_out;
+			if_gp_branch <= ex_gp_branch;
+			if_fp_branch <= ex_fp_branch;
+
+			mem_operand_a <= ex_operand_a;
+			mem_f_operand_a <= ex_f_operand_a;
+			mem_bus_b <= ex_bus_b;
+			mem_f_operand_b <= ex_f_operand_b;
+			mem_write_enable <= ex_write_enable;
+			mem_mem_byte <= ex_mem_byte;
+			mem_mem_half_word <= ex_mem_half_word;
+			mem_mem_sign_extend <= ex_mem_sign_extend;
+			mem_jal_instr <= ex_jal_instr;
+			mem_mem_to_reg <= ex_mem_to_reg;
+			mem_mov_instr <= ex_mov_instr;
+			if_branch <= ex_branch;
+			if_jump <= ex_jump;
+
+			mem_pc_plus_8 <= ex_pc_plus_8;
+		end
 	end
 
 
@@ -166,15 +220,30 @@ module processor(
 
 
 	always(posedge clock) begin
-		wb_mem_data <= mem_mem_data;
+		if(reset) begin
+			wb_mem_data <= 32'b0;
 
-		wb_alu_out <= mem_alu_out;
-		wb_fpu_out <= mem_fpu_out;
-		wb_operand_a <= mem_operand_a;
-		wb_f_operand_a <= mem_f_operand_a;
-		wb_jal_instr <= mem_jal_instr;
-		wb_mem_to_reg <= mem_mem_to_reg;
-		wb_pc_plus_8 <= mem_pc_plus_8;
+			wb_alu_out <= 32'b0;
+			wb_fpu_out <= 32'b0;
+			wb_operand_a <= 32'b0;
+			wb_f_operand_a <= 32'b0;
+			wb_jal_instr <= 1'b0;
+			wb_mem_to_reg <= 1'b0;
+
+			wb_pc_plus_8 <= 32'b0;
+		end
+		else begin
+			wb_mem_data <= mem_mem_data;
+
+			wb_alu_out <= mem_alu_out;
+			wb_fpu_out <= mem_fpu_out;
+			wb_operand_a <= mem_operand_a;
+			wb_f_operand_a <= mem_f_operand_a;
+			wb_jal_instr <= mem_jal_instr;
+			wb_mem_to_reg <= mem_mem_to_reg;
+
+			wb_pc_plus_8 <= mem_pc_plus_8;
+		end
 	end
 
 	wb WB(
