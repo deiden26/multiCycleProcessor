@@ -19,7 +19,12 @@ module fprFile
 
 	 integer i;
 
-	 always @(posedge clk) begin
+	 always@(*) begin
+	 	busA<=regFile[Rs];
+		busB<=regFile[Rt];
+	 end
+	 
+	 always @(negedge clk) begin
 	 	if(reset) begin
 		 	for (i = 0; i < 32; i = i+1) begin
 	 			regFile[i] = 0;
@@ -38,8 +43,6 @@ module fprFile
 				regFile[Rw] <=regFile[Rw];
 		end
 
-		busA<=regFile[Rs];
-		busB<=regFile[Rt];
 	end
 
 endmodule
