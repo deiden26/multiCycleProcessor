@@ -19,7 +19,7 @@ module processor(
 	logic
 		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
 		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall,
-		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump,
+		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg,
 		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr,
 		wb_jal_instr, wb_mem_to_reg, wb_mov_instr,
 		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
@@ -56,6 +56,15 @@ module processor(
 		.inst_out (if_instr)               // fetched instruction out
 	);
 
+	//Signals to forward to the ifu immediately
+	if_branch = ex_branch;
+	if_gp_branch = ex_gp_branch;
+	if_fp_branch = ex_fp_branch;
+	if_jump = ex_jump;
+	if_jump_use_reg = ex_jump_use_reg;
+	if_operand_a = ex_operand_a;
+	if_stall = ld_stall || mul_stall;
+
 	/*~~~~~ IFU ID Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset) begin
@@ -65,12 +74,10 @@ module processor(
 		else if (if_id_stall) begin
 			id_instr <= id_instr;
 			id_pc_plus_8 <= id_pc_plus_8;
-			if_stall <= if_stall;
 		end
 		else begin
 			id_instr <= if_instr;
 			id_pc_plus_8 <= if_pc_plus_8;
-			if_stall <= ld_stall || mul_stall;
 		end
 	end
 
@@ -98,14 +105,13 @@ module processor(
 		.MEM_SIGN_EXT(id_mem_sign_extend),
 		.JAL_INSTR(id_jal_instr),
 		.JUMP_USE_REG(id_jump_use_reg),
-		.Stall_Id(ld_stall)
+		.Stall_ID(ld_stall)
 	);
 
 	/*~~~~~ ID EX Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset || ld_stall) begin
 			ex_operand_a <= 32'b0;
-			if_operand_a <= 32'b0;
 			ex_operand_b <= 32'b0;
 			ex_bus_b <= 32'b0;
 			ex_f_operand_a <= 32'b0;
@@ -121,13 +127,12 @@ module processor(
 			ex_mem_half_word <= 1'b0;
 			ex_mem_sign_extend <= 1'b0;
 			ex_jal_instr <= 1'b0;
-			if_jump_use_reg <= 1'b0;
+			ex_jump_use_reg <= 1'b0;
 
 			ex_pc_plus_8 <= 32'b0;
 		end
 		else if (id_ex_stall) begin
 			ex_operand_a <= ex_operand_a;
-			if_operand_a <= if_operand_a;
 			ex_operand_b <= ex_operand_b;
 			ex_bus_b <= ex_bus_b;
 			ex_f_operand_a <= ex_f_operand_a;
@@ -143,13 +148,12 @@ module processor(
 			ex_mem_half_word <= ex_mem_half_word;
 			ex_mem_sign_extend <= ex_mem_sign_extend;
 			ex_jal_instr <= ex_jal_instr;
-			if_jump_use_reg <= if_jump_use_reg;
+			ex_jump_use_reg <= if_jump_use_reg;
 
 			ex_pc_plus_8 <= ex_pc_plus_8;
 		end
 		else begin
 			ex_operand_a <= id_operand_a;
-			if_operand_a <= id_operand_a;
 			ex_operand_b <= id_operand_b;
 			ex_bus_b <= id_bus_b;
 			ex_f_operand_a <= id_f_operand_a;
@@ -165,7 +169,7 @@ module processor(
 			ex_mem_half_word <= id_mem_half_word;
 			ex_mem_sign_extend <= id_mem_sign_extend;
 			ex_jal_instr <= id_jal_instr;
-			if_jump_use_reg <= id_jump_use_reg;
+			ex_jump_use_reg <= id_jump_use_reg;
 
 			ex_pc_plus_8 <= id_pc_plus_8;
 		end
@@ -187,14 +191,11 @@ module processor(
 		.mul_stall(mul_stall)
 	);
 
-
 	/*~~~~~ EX MEM Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset) begin
 			mem_alu_out <= 32'b0;
 			mem_fpu_out <= 32'b0;
-			if_gp_branch <= 1'b0;
-			if_fp_branch <= 1'b0;
 
 			mem_operand_a <= 32'b0;
 			mem_f_operand_a <= 32'b0;
@@ -207,16 +208,12 @@ module processor(
 			mem_jal_instr <= 1'b0;
 			mem_mem_to_reg <= 1'b0;
 			mem_mov_instr <= 1'b0;
-			if_branch <= 1'b0;
-			if_jump <= 1'b0;
 
 			mem_pc_plus_8 <= 32'b0;
 		end
 		else if (ex_mem_stall) begin
 			mem_alu_out <= mem_alu_out;
 			mem_fpu_out <= mem_fpu_out;
-			if_gp_branch <= if_gp_branch;
-			if_fp_branch <= if_fp_branch;
 
 			mem_operand_a <= mem_operand_a;
 			mem_f_operand_a <= mem_f_operand_a;
@@ -229,16 +226,12 @@ module processor(
 			mem_jal_instr <= mem_jal_instr;
 			mem_mem_to_reg <= mem_mem_to_reg;
 			mem_mov_instr <= mem_mov_instr;
-			if_branch <= if_branch;
-			if_jump <= if_jump;
 
 			mem_pc_plus_8 <= mem_pc_plus_8;
 		end
 		else begin
 			mem_alu_out <= ex_alu_out;
 			mem_fpu_out <= ex_fpu_out;
-			if_gp_branch <= ex_gp_branch;
-			if_fp_branch <= ex_fp_branch;
 
 			mem_operand_a <= ex_operand_a;
 			mem_f_operand_a <= ex_f_operand_a;
@@ -251,8 +244,6 @@ module processor(
 			mem_jal_instr <= ex_jal_instr;
 			mem_mem_to_reg <= ex_mem_to_reg;
 			mem_mov_instr <= ex_mov_instr;
-			if_branch <= ex_branch;
-			if_jump <= ex_jump;
 
 			mem_pc_plus_8 <= ex_pc_plus_8;
 		end
