@@ -4,7 +4,7 @@ module hazardDetector(
 	input logic ALU_SRC,
 	input logic [0:4] Rw_ID_EX,
 	input logic [0:4] Rw_EX_MEM,
-	input logic [0:5] opcode,
+	input LD_ID_EX,
 	output logic Stall_ID,
 	output logic [0:1] OP_A_SEL,
 	output logic [0:1] OP_B_SEL
@@ -19,7 +19,7 @@ always @(*) begin
 	//Determine Rs Forwarding
 
 	if(Rs_ID == Rw_ID_EX) begin
-			if(opcode == LB || opcode == LH || opcode == LBU || opcode == LHU || opcode == LW )
+			if(LD_ID_EX ==1)
 				Stall_ID = 1;
 			else
 				OP_A_SEL = FWD_FROM_EX_MEM;
@@ -38,7 +38,7 @@ always @(*) begin
 	if(ALU_SRC == 0) begin
 
 		if(Rt_ID == Rw_ID_EX) begin
-			if(opcode == LB || opcode == LH || opcode == LBU || opcode == LHU || opcode == LW )
+			if(LD_ID_EX ==1)
 				Stall_ID = 1;
 			else
 				OP_B_SEL = FWD_FROM_EX_MEM;
@@ -54,3 +54,4 @@ always @(*) begin
 	end //if(ALU_SRC == 0)
 
 end //always
+endmodule

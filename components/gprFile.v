@@ -8,13 +8,13 @@ module gprFile
 	 input Rdst,
 	 input jal_instr,
 	 input [0:31] busW,
+	 output logic [0:4] Rw,
 	 output logic [0:31] busA,
 	 output logic [0:31] busB
 	 );
 
 	 reg [0:31] regFile[0:31];
 
-	 reg [0:4] Rw;
 	 reg [0:4] Rd_or_Rt;
 
 
