@@ -104,6 +104,9 @@ module processor(
 		.instruction(id_instr),
 		.BUS_W(bus_w),
 		.FBUS_W(fbus_w),
+		.Rw_ID_EX(),
+		.Rw_EX_MEM(),
+		.LD_from_ID_EX(),
 		.OPERAND_A(id_operand_a),
 		.OPERAND_B(id_operand_b),
 		.BUS_B(id_bus_b),
@@ -113,6 +116,7 @@ module processor(
 		.JUMP(id_jump),
 		.ALU_CTRL_BITS(id_alu_ctrl_bits),
 		.FPU_CTRL_BITS(id_fpu_ctrl_bits),
+		.ALU_SRC(),
 		.MEM_WR(id_write_enable),
 		.MEM_TO_REG(id_mem_to_reg),
 		.MOV_INSTR(id_mov_instr),
@@ -194,8 +198,13 @@ module processor(
 	
 	/*~~~~~ EX Stage ~~~~~*/
 	alufpu ALUFPU(
-		.busA(ex_operand_a),
-		.busB(ex_operand_b),
+		.regA(ex_operand_a),
+		.regB(ex_operand_b),
+		.res_EX_MEM(),
+		.res_MEM_WB(),
+		.ALU_SRC(),
+		.busA_sel(),
+		.busB_sel
 		.ALUctrl(ex_alu_ctrl_bits),
 		.fbusA(ex_f_operand_a),
 		.fbusB(ex_f_operand_b),
