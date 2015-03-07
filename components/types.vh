@@ -1,7 +1,7 @@
 typedef enum logic [0:1] {
 	NO_FWD = 2'b0,
-	FWD_FROM_EX_MEM = 2'b1,
-	FWD_FROM_MEM_WB = 2'b2
+	FWD_FROM_EX_MEM = 2'b01,
+	FWD_FROM_MEM_WB = 2'b10
 } FWD_SEL;
 
 

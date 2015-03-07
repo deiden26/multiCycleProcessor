@@ -8,9 +8,6 @@
 //                                                                     //
 /////////////////////////////////////////////////////////////////////////
 
-`timescale 1ns/100ps
-
-
 module ifu(
 	input clock,                  // system clock
 	input reset,                  // system reset

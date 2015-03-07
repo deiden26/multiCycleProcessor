@@ -50,7 +50,7 @@ module processor(
 		.inst_out (if_instr)               // fetched instruction out
 	);
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			id_instr <= 32'b0;
 			id_pc_plus_8 <= 32'b0;
@@ -90,7 +90,7 @@ module processor(
 		.JUMP_USE_REG(id_jump_use_reg)
 	);
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			ex_operand_a <= 32'b0;
 			if_operand_a <= 32'b0;
@@ -174,7 +174,7 @@ module processor(
 	);
 
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			mem_alu_out <= 32'b0;
 			mem_fpu_out <= 32'b0;
@@ -267,7 +267,7 @@ module processor(
 	);
 
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			wb_mem_data <= 32'b0;
 
