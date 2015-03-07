@@ -8,9 +8,6 @@
 //                                                                     //
 /////////////////////////////////////////////////////////////////////////
 
-`timescale 1ns/100ps
-
-
 module ifu(
 	input clock,                  // system clock
 	input reset,                  // system reset
@@ -19,6 +16,7 @@ module ifu(
 	input fp_branch,              // taken-branch signal for fpu 
 	input jump,                   // jump signal
 	input use_reg,                // if JR or JALR
+	input stall,
 	input [0:31] pc_from_reg,            // use if use_reg is TRUE
 	input  [0:31] inst_from_mem,          // Data coming back from instruction-memory
 
@@ -69,6 +67,8 @@ module ifu(
 	always@(posedge clock) begin
 		if(reset)
 			current_pc <= 32'b0;       // initial PC value is 0
+		else if(stall)
+			current_pc <= current_pc;  //Keep the current PC
 		else
 			current_pc <= next_pc;    // transition to next PC
 	end 

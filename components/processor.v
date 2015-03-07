@@ -16,11 +16,12 @@ module processor(
 );
 
 	logic
-		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg,
+		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
 		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg,
 		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump,
 		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr,
-		wb_jal_instr, wb_mem_to_reg, wb_mov_instr;
+		wb_jal_instr, wb_mem_to_reg, wb_mov_instr,
+		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
 
 	logic [0:31]
 		if_operand_a, if_pc_plus_8, if_instr,
@@ -42,6 +43,7 @@ module processor(
 		.fp_branch (if_fp_branch),              // taken-branch signal for fpu 
 		.jump (if_jump),                   // jump signal
 		.use_reg (if_jump_use_reg),                // if JR or JALR
+		.stall (if_stall),
 		.pc_from_reg (if_operand_a),            // use if use_reg is TRUE
 		.inst_from_mem (inst_from_mem),          // Data coming back from instruction-memory
 
@@ -50,12 +52,12 @@ module processor(
 		.inst_out (if_instr)               // fetched instruction out
 	);
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			id_instr <= 32'b0;
 			id_pc_plus_8 <= 32'b0;
 		end
-		else if (stall) begin
+		else if (if_id_stall) begin
 			id_instr <= id_instr;
 			id_pc_plus_8 <= id_pc_plus_8;
 		end
@@ -90,7 +92,7 @@ module processor(
 		.JUMP_USE_REG(id_jump_use_reg)
 	);
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			ex_operand_a <= 32'b0;
 			if_operand_a <= 32'b0;
@@ -113,7 +115,7 @@ module processor(
 
 			ex_pc_plus_8 <= 32'b0;
 		end
-		else if (stall) begin
+		else if (id_ex_stall) begin
 			ex_operand_a <= ex_operand_a;
 			if_operand_a <= if_operand_a;
 			ex_operand_b <= ex_operand_b;
@@ -174,7 +176,7 @@ module processor(
 	);
 
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			mem_alu_out <= 32'b0;
 			mem_fpu_out <= 32'b0;
@@ -197,7 +199,7 @@ module processor(
 
 			mem_pc_plus_8 <= 32'b0;
 		end
-		else if (stall) begin
+		else if (ex_mem_stall) begin
 			mem_alu_out <= mem_alu_out;
 			mem_fpu_out <= mem_fpu_out;
 			if_gp_branch <= if_gp_branch;
@@ -267,7 +269,7 @@ module processor(
 	);
 
 
-	always(posedge clock) begin
+	always @(posedge clock) begin
 		if (reset) begin
 			wb_mem_data <= 32'b0;
 
@@ -280,7 +282,7 @@ module processor(
 
 			wb_pc_plus_8 <= 32'b0;
 		end
-		else if (stall) begin
+		else if (mem_wb_stall) begin
 			wb_mem_data <= wb_mem_data;
 
 			wb_alu_out <= wb_alu_out;
