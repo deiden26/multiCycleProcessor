@@ -4,7 +4,12 @@ module ID_Stage(
 	input [0:31] instruction,
 	input [0:31] BUS_W ,
 	input [0:31] FBUS_W,
-	output [0:31] OPERAND_A,
+	input [0:4] Rw_ID_EX,
+	input [0:4] Rw_EX_MEM,
+	input  LD_from_ID_EX,
+	input [0:31] res_from_EX_MEM,
+	input [0:31] res_from_MEM_WB,
+	output logic [0:31] OPERAND_A,
 	output logic [0:31] OPERAND_B,
 	output logic [0:31] BUS_B,
 	output [0:31] F_OPERAND_A,
@@ -20,20 +25,21 @@ module ID_Stage(
 	output MEM_HALFWORD_OP,
 	output MEM_SIGN_EXT,
 	output JAL_INSTR,
-	output JUMP_USE_REG
+	output JUMP_USE_REG,
+	output Stall_ID
 	);
 
 logic temp_REG_DST, temp_R_31, temp_REG_WR, temp_F_REG_WR, temp_IMM_ZERO, ALU_SRC, temp_EXT_OP;
-
-logic [0:31] temp_bus_B, temp_f_bus_B;
-
+logic [0:4] Rw, F_Rw;
+logic [0:31] temp_bus_A,temp_bus_B, temp_f_bus_B;
+logic [0:1] OP_A_SEL,OP_B_SEL;
 logic [0:4] Rs;
 logic [0:4] Rt;
 logic [0:4] Rd;
 logic [0:15]IMM_FIELD;
 logic [0:31] IMM_FIELD_EXT;
 
-
+reg [0:4] Rw_Buffer[0:1];
 
 
 control_logic control_0(
@@ -68,7 +74,8 @@ gprFile gprFile0(
 	.Rdst(temp_REG_DST),
 	.jal_instr(JAL_INSTR),
 	.busW(BUS_W),
-	.busA(OPERAND_A),
+	.Rw(Rw),
+	.busA(temp_bus_A),
 	.busB(temp_bus_B)
 	);
 
@@ -81,8 +88,21 @@ fprFile fprFile0(
 	.Rd(Rd),
 	.Rdst(temp_REG_DST),
 	.busW(FBUS_W),
+	.Rw(F_Rw),
 	.busA(F_OPERAND_A),
 	.busB(F_OPERAND_B)
+	);
+
+hazardDetector hD(
+	.Rs_ID(Rs),
+	.Rt_ID(Rt),
+	.ALU_SRC(ALU_SRC),
+	.Rw_ID_EX(Rw_ID_EX),
+	.Rw_EX_MEM(Rw_EX_MEM),
+	.LD_ID_EX(MEM_TO_REG),
+	.Stall_ID(Stall_ID),
+	.OP_A_SEL(OP_A_SEL),
+	.OP_B_SEL(OP_B_SEL)
 	);
 
 always @(*) begin
@@ -92,7 +112,12 @@ Rd = instruction[16:20];
 
 IMM_FIELD = (temp_IMM_ZERO == 1) ? 16'h0 : instruction[16:31];
 
-
+if(OP_A_SEL == FWD_FROM_EX_MEM)
+	OPERAND_A = res_from_EX_MEM;
+else if(OP_A_SEL == FWD_FROM_MEM_WB)
+	OPERAND_A = res_from_MEM_WB;
+else 
+	OPERAND_A = temp_bus_A;
 
 	// IMM_FIELD_EXT = (temp_EXT_OP == 1) ? {{16{IMM_FIELD[15]}}, IMM_FIELD[0:15]} : {16'h0, IMM_FIELD[0:15]};
 	if (temp_EXT_OP == 1)
@@ -100,6 +125,17 @@ IMM_FIELD = (temp_IMM_ZERO == 1) ? 16'h0 : instruction[16:31];
 	else
 		IMM_FIELD_EXT = $unsigned(IMM_FIELD);
 	BUS_B = temp_bus_B;
-	OPERAND_B = (ALU_SRC ==1) ? IMM_FIELD_EXT : temp_bus_B;
-	end
+
+if(ALU_SRC == 1)
+	OPERAND_B = IMM_FIELD_EXT;
+else begin
+	if(OP_B_SEL == FWD_FROM_EX_MEM)
+		OPERAND_B = res_from_EX_MEM;
+	else if(OP_B_SEL == FWD_FROM_MEM_WB)
+		OPERAND_B = res_from_MEM_WB;
+	else 
+		OPERAND_B = temp_bus_B;
+end
+	
+	end //always
 endmodule
