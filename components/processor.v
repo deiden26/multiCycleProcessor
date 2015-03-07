@@ -15,14 +15,16 @@ module processor(
 	 input [0:31]inst_from_mem
 );
 
+	/*~~~~~ Single Bit Signals  ~~~~~*/
 	logic
 		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
-		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg,
+		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall,
 		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump,
 		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr,
 		wb_jal_instr, wb_mem_to_reg, wb_mov_instr,
 		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
 
+	/*~~~~~ 32 Bit Signals  ~~~~~*/
 	logic [0:31]
 		if_operand_a, if_pc_plus_8, if_instr,
 		id_instr,id_operand_a, id_operand_b, id_pc_plus_8,
@@ -31,10 +33,12 @@ module processor(
 		wb_alu_out, wb_fpu_out, wb_operand_a, wb_mem_data, wb_pc_plus_8,
 		bus_w, fbus_w;
 
+	/*~~~~~ 4 Bit Signals  ~~~~~*/
 	logic [0:3]
 		id_alu_ctrl_bits,
 		ex_alu_ctrl_bits;
 
+	/*~~~~~ IFU Stage ~~~~~*/
 	ifu IFU(
 		.clock (clock),                  // system clock
 		.reset (reset),                  // system reset
@@ -52,6 +56,7 @@ module processor(
 		.inst_out (if_instr)               // fetched instruction out
 	);
 
+	/*~~~~~ IFU ID Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset) begin
 			id_instr <= 32'b0;
@@ -60,13 +65,16 @@ module processor(
 		else if (if_id_stall) begin
 			id_instr <= id_instr;
 			id_pc_plus_8 <= id_pc_plus_8;
+			if_stall <= if_stall;
 		end
 		else begin
 			id_instr <= if_instr;
 			id_pc_plus_8 <= if_pc_plus_8;
+			if_stall <= ld_stall || mul_stall;
 		end
 	end
 
+	/*~~~~~ ID Stage ~~~~~*/
 	ID_Stage ID(
 		.clk(clock),
 		.reset(reset),
@@ -89,11 +97,13 @@ module processor(
 		.MEM_HALFWORD_OP(id_mem_half_word),
 		.MEM_SIGN_EXT(id_mem_sign_extend),
 		.JAL_INSTR(id_jal_instr),
-		.JUMP_USE_REG(id_jump_use_reg)
+		.JUMP_USE_REG(id_jump_use_reg),
+		.Stall_Id(ld_stall)
 	);
 
+	/*~~~~~ ID EX Pipe Register ~~~~~*/
 	always @(posedge clock) begin
-		if (reset) begin
+		if (reset || ld_stall) begin
 			ex_operand_a <= 32'b0;
 			if_operand_a <= 32'b0;
 			ex_operand_b <= 32'b0;
@@ -162,6 +172,7 @@ module processor(
 	end
 		
 	
+	/*~~~~~ EX Stage ~~~~~*/
 	alufpu ALUFPU(
 		.busA(ex_operand_a),
 		.busB(ex_operand_b),
@@ -172,10 +183,12 @@ module processor(
 		.ALUout(ex_alu_out),
 		.FPUout(ex_fpu_out),
 		.gp_branch(ex_gp_branch),
-		.fp_branch(ex_fp_branch)
+		.fp_branch(ex_fp_branch),
+		.mul_stall(mul_stall)
 	);
 
 
+	/*~~~~~ EX MEM Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset) begin
 			mem_alu_out <= 32'b0;
@@ -246,6 +259,7 @@ module processor(
 	end
 
 
+	/*~~~~~ MEM Stage ~~~~~*/
 	mem_stage MEM(
 		.store_fp(1'b0),
 		//Connections to processor
@@ -269,6 +283,7 @@ module processor(
 	);
 
 
+	/*~~~~~ MEM WB Pipe Register ~~~~~*/
 	always @(posedge clock) begin
 		if (reset) begin
 			wb_mem_data <= 32'b0;
@@ -308,6 +323,7 @@ module processor(
 		end
 	end
 
+	/*~~~~~ WB Stage ~~~~~*/
 	wb WB(
 		.ALUout(wb_alu_out),
 		.FPUout(wb_fpu_out),
