@@ -7,7 +7,7 @@ module fprFile
 	 input [0:4] Rd,
 	 input Rdst,
 	 input [0:31] busW,
-	 output logic [0:4] Rw;
+	 output logic [0:4] Rw,
 	 output logic [0:31] busA,
 	 output logic [0:31] busB
 	 );
@@ -19,8 +19,8 @@ module fprFile
 	 integer i;
 
 	 always@(*) begin
-	 	busA<=regFile[Rs];
-		busB<=regFile[Rt];
+	 	busA=regFile[Rs];
+		busB=regFile[Rt];
 	 end
 	 
 	 always @(negedge clk) begin

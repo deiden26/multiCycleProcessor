@@ -21,8 +21,8 @@ module gprFile
 	 integer i;
 
 	 always@(*) begin
-	 	busA<=regFile[Rs];
-		busB<=regFile[Rt];
+	 	busA=regFile[Rs];
+		busB=regFile[Rt];
 	 end
 
 

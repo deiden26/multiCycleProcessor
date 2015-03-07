@@ -7,8 +7,6 @@ module ID_Stage(
 	input [0:4] Rw_ID_EX,
 	input [0:4] Rw_EX_MEM,
 	input  LD_from_ID_EX,
-	input [0:31] res_from_EX_MEM,
-	input [0:31] res_from_MEM_WB,
 	output logic [0:31] OPERAND_A,
 	output logic [0:31] OPERAND_B,
 	output logic [0:31] BUS_B,
@@ -99,7 +97,7 @@ hazardDetector hD(
 	.ALU_SRC(ALU_SRC),
 	.Rw_ID_EX(Rw_ID_EX),
 	.Rw_EX_MEM(Rw_EX_MEM),
-	.LD_ID_EX(MEM_TO_REG),
+	.LD_ID_EX(LD_from_ID_EX),
 	.Stall_ID(Stall_ID),
 	.OP_A_SEL(OP_A_SEL),
 	.OP_B_SEL(OP_B_SEL)
@@ -112,11 +110,7 @@ Rd = instruction[16:20];
 
 IMM_FIELD = (temp_IMM_ZERO == 1) ? 16'h0 : instruction[16:31];
 
-if(OP_A_SEL == FWD_FROM_EX_MEM)
-	OPERAND_A = res_from_EX_MEM;
-else if(OP_A_SEL == FWD_FROM_MEM_WB)
-	OPERAND_A = res_from_MEM_WB;
-else 
+
 	OPERAND_A = temp_bus_A;
 
 	// IMM_FIELD_EXT = (temp_EXT_OP == 1) ? {{16{IMM_FIELD[15]}}, IMM_FIELD[0:15]} : {16'h0, IMM_FIELD[0:15]};
@@ -124,18 +118,13 @@ else
 		IMM_FIELD_EXT = $signed(IMM_FIELD);
 	else
 		IMM_FIELD_EXT = $unsigned(IMM_FIELD);
+
 	BUS_B = temp_bus_B;
 
-if(ALU_SRC == 1)
-	OPERAND_B = IMM_FIELD_EXT;
-else begin
-	if(OP_B_SEL == FWD_FROM_EX_MEM)
-		OPERAND_B = res_from_EX_MEM;
-	else if(OP_B_SEL == FWD_FROM_MEM_WB)
-		OPERAND_B = res_from_MEM_WB;
+	if(ALU_SRC == 1)
+		OPERAND_B = IMM_FIELD_EXT;
 	else 
 		OPERAND_B = temp_bus_B;
-end
 	
 	end //always
 endmodule
