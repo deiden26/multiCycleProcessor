@@ -7,6 +7,8 @@ module ID_Stage(
 	input [0:4] Rw_ID_EX,
 	input [0:4] Rw_EX_MEM,
 	input  LD_from_ID_EX,
+	output logic [0:4] Rw,
+	output logic [0:4] F_Rw,
 	output logic [0:31] OPERAND_A,
 	output logic [0:31] OPERAND_B,
 	output logic [0:31] BUS_B,
@@ -29,7 +31,6 @@ module ID_Stage(
 	);
 
 logic temp_REG_DST, temp_R_31, temp_REG_WR, temp_F_REG_WR, temp_IMM_ZERO, temp_EXT_OP;
-logic [0:4] Rw, F_Rw;
 logic [0:31] temp_bus_A,temp_bus_B, temp_f_bus_B;
 logic [0:1] OP_A_SEL,OP_B_SEL;
 logic [0:4] Rs;
