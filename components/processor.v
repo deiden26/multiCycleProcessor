@@ -17,25 +17,39 @@ module processor(
 
 	/*~~~~~ Single Bit Signals  ~~~~~*/
 	logic
+		//If stage
 		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
+		//ID stage
 		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall,
-		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg,
+		//EX stage
+		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg, ex_gp_branch, ex_fp_branch,
+		//MEM stage
 		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr,
+		//WB stage
 		wb_jal_instr, wb_mem_to_reg, wb_mov_instr,
+		//Pipe register stalls
 		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
 
 	/*~~~~~ 32 Bit Signals  ~~~~~*/
 	logic [0:31]
+		//IF stage
 		if_operand_a, if_pc_plus_8, if_instr,
-		id_instr,id_operand_a, id_operand_b, id_pc_plus_8,
-		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_gp_branch, ex_fp_branch, ex_pc_plus_8,ex_bus_b,
-		mem_alu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
-		wb_alu_out, wb_fpu_out, wb_operand_a, wb_mem_data, wb_pc_plus_8,
+		//ID stage
+		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b,
+		//EX stage
+		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b,
+		//MEM stage
+		mem_alu_out, mem_fpu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
+		//WB stage
+		wb_alu_out, wb_fpu_out, wb_operand_a, wb_f_operand_a, wb_mem_data, wb_pc_plus_8,
+		//WB-ID connections
 		bus_w, fbus_w;
 
 	/*~~~~~ 4 Bit Signals  ~~~~~*/
 	logic [0:3]
+		//ID stage
 		id_alu_ctrl_bits,
+		//EX stage
 		ex_alu_ctrl_bits;
 
 	/*~~~~~ IFU Stage ~~~~~*/
@@ -64,7 +78,7 @@ module processor(
 		if_jump <= ex_jump;
 		if_jump_use_reg <= ex_jump_use_reg;
 		if_operand_a <= ex_operand_a;
-		if_stall <= ld_stall || mul_stall;
+		if_stall <= ld_stall | mul_stall;
 	end
 
 	/*~~~~~ IFU ID Pipe Register ~~~~~*/
