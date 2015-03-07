@@ -56,14 +56,16 @@ module processor(
 		.inst_out (if_instr)               // fetched instruction out
 	);
 
-	//Signals to forward to the ifu immediately
-	if_branch = ex_branch;
-	if_gp_branch = ex_gp_branch;
-	if_fp_branch = ex_fp_branch;
-	if_jump = ex_jump;
-	if_jump_use_reg = ex_jump_use_reg;
-	if_operand_a = ex_operand_a;
-	if_stall = ld_stall || mul_stall;
+	/*~~~~~ Signals to forward to the ifu immediately ~~~~~*/
+	always @(*) begin
+		if_branch <= ex_branch;
+		if_gp_branch <= ex_gp_branch;
+		if_fp_branch <= ex_fp_branch;
+		if_jump <= ex_jump;
+		if_jump_use_reg <= ex_jump_use_reg;
+		if_operand_a <= ex_operand_a;
+		if_stall <= ld_stall || mul_stall;
+	end
 
 	/*~~~~~ IFU ID Pipe Register ~~~~~*/
 	always @(posedge clock) begin
