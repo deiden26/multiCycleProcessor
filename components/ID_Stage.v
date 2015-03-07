@@ -31,7 +31,6 @@ module ID_Stage(
 	);
 
 logic temp_REG_DST, temp_R_31, temp_REG_WR, temp_F_REG_WR, temp_IMM_ZERO, temp_EXT_OP;
-logic [0:4] Rw, F_Rw;
 logic [0:31] temp_bus_A,temp_bus_B, temp_f_bus_B;
 logic [0:1] OP_A_SEL,OP_B_SEL;
 logic [0:4] Rs;
