@@ -1,12 +1,17 @@
-module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,ALUctrl, fbusA, fbusB, FPUctrl, ALUout, FPUout, gp_branch, fp_branch);
-	input [0:31] regA, regB, res_EX_MEM, res_MEM_WB, fbusA, fbusB;
+module alufpu(clock, regA, regB, FWD_FROM_EX_MEM, FWD_FROM_MEM_WB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
+	input [0:31] regA, regB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
 	input [0:3] ALUctrl;
-	input FPUctrl;
+	input FPUctrl, isMult, clock;
+	input busA_sel, busB_sel, FWD_FROM_EX_MEM, FWD_FROM_MEM_WB, ALU_SRC;
 
+	reg [0:31] busA, busB;
 	output [0:31] ALUout, FPUout;
+	reg [0:31] temp_busB;
+	reg[0:31] temp_busA;
+	output reg multStall;
 	output reg gp_branch, fp_branch;
 	reg branch;
-	reg [0:31] busA, busB;
+	reg [0:5] counter;
 	reg [0:31] multOut, multuOut, FPUout, ALUout, busAout, fbusAout;
 	reg [0:31]  sllOut, srlOut, sraOut;
 	reg [0:31]  addOut, subOut;
@@ -16,6 +21,7 @@ module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,AL
 
 	//make partial products
 	reg [0:31] pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7, pp8, pp9, pp10, pp11, pp12, pp13, pp14, pp15, pp16, pp17, pp18, pp19, pp20, pp21, pp22, pp23, pp24, pp25, pp26, pp27, pp28, pp29, pp30, pp31;
+
 
 	always@(*)
 	begin
@@ -37,9 +43,70 @@ module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,AL
 		else 
 			busB = regB;
 	end
+	end
 
+	always@(posedge clock) begin
+		if (counter > 0)
+			counter <= counter-1;
+		if (counter == 31)
+			temp_busA <= pp0;
+		else
+			temp_busA <= FPUout;
+		case(counter)
+		0: temp_busB <= 0;
+		1: temp_busB <= pp1;
+		2: temp_busB <= pp2;
+		3: temp_busB <= pp3;
+		4: temp_busB <= pp4;
+		5: temp_busB <= pp5;
+		6: temp_busB <= pp6;
+		7: temp_busB <= pp7;
+		8: temp_busB <= pp8;
+		9: temp_busB <= pp9;
+		10: temp_busB <= pp10;
+		11: temp_busB <= pp11;
+		12: temp_busB <= pp12;
+		13: temp_busB <= pp13;
+		14: temp_busB <= pp14;
+		15: temp_busB <= pp15;
+		16: temp_busB <= pp16;
+		17: temp_busB <= pp17;
+		18: temp_busB <= pp18;
+		19: temp_busB <= pp19;
+		20: temp_busB <= pp20;
+		21: temp_busB <= pp21;
+		22: temp_busB <= pp22;
+		23: temp_busB <= pp23;
+		24: temp_busB <= pp24;
+		25: temp_busB <= pp25;
+		26: temp_busB <= pp26;
+		27: temp_busB <= pp27;
+		28: temp_busB <= pp28;
+		29: temp_busB <= pp29;
+		30: temp_busB <= pp30;
+		31: temp_busB <= pp31;
+		endcase
+	end
 
-	//shift busB
+	always@(negedge clock)
+		multOut <= temp_busA + temp_busB;
+
+	always@(isMult) begin
+		if (isMult==1)
+			counter <= 32;
+		else
+			counter <= 0;
+	end
+
+	always@(counter) begin
+		if (counter==0)
+			multStall <= 0;
+		else
+			multStall <= 1;
+	end
+	
+	always@(*)
+	begin
 	
 	//ALU output
 	sllOut <= busA << busB;
@@ -107,6 +174,7 @@ module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,AL
 	//FPU output
 	always@(*)
         begin
+
         //multOut <= fbusA * fbusB;
         pp0 <= {(fbusA[0]&fbusB[31]), 31'b0};
         pp1 <= {(fbusA[1]&fbusB[30]), (fbusA[1]&fbusB[31]), 30'b0};
@@ -141,7 +209,7 @@ module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,AL
 	pp30 <= {(fbusA[30]&fbusB[1]), (fbusA[30]&fbusB[2]), (fbusA[30]&fbusB[3]), (fbusA[30]&fbusB[4]), (fbusA[30]&fbusB[5]), (fbusA[30]&fbusB[6]), (fbusA[30]&fbusB[7]), (fbusA[30]&fbusB[8]), (fbusA[30]&fbusB[9]), (fbusA[30]&fbusB[10]), (fbusA[30]&fbusB[11]), (fbusA[30]&fbusB[12]), (fbusA[30]&fbusB[13]), (fbusA[30]&fbusB[14]), (fbusA[30]&fbusB[15]), (fbusA[30]&fbusB[16]), (fbusA[30]&fbusB[17]), (fbusA[30]&fbusB[18]), (fbusA[30]&fbusB[19]), (fbusA[30]&fbusB[20]), (fbusA[30]&fbusB[21]), (fbusA[30]&fbusB[22]), (fbusA[30]&fbusB[23]), (fbusA[30]&fbusB[24]), (fbusA[30]&fbusB[25]), (fbusA[30]&fbusB[26]), (fbusA[30]&fbusB[27]), (fbusA[30]&fbusB[28]), (fbusA[30]&fbusB[29]), (fbusA[30]&fbusB[30]), (fbusA[30]&fbusB[31]), 1'b0};
 	pp31 <= {(fbusA[31]&fbusB[0]), (fbusA[31]&fbusB[1]), (fbusA[31]&fbusB[2]), (fbusA[31]&fbusB[3]), (fbusA[31]&fbusB[4]), (fbusA[31]&fbusB[5]), (fbusA[31]&fbusB[6]), (fbusA[31]&fbusB[7]), (fbusA[31]&fbusB[8]), (fbusA[31]&fbusB[9]), (fbusA[31]&fbusB[10]), (fbusA[31]&fbusB[11]), (fbusA[31]&fbusB[12]), (fbusA[31]&fbusB[13]), (fbusA[31]&fbusB[14]), (fbusA[31]&fbusB[15]), (fbusA[31]&fbusB[16]), (fbusA[31]&fbusB[17]), (fbusA[31]&fbusB[18]), (fbusA[31]&fbusB[19]), (fbusA[31]&fbusB[20]), (fbusA[31]&fbusB[21]), (fbusA[31]&fbusB[22]), (fbusA[31]&fbusB[23]), (fbusA[31]&fbusB[24]), (fbusA[31]&fbusB[25]), (fbusA[31]&fbusB[26]), (fbusA[31]&fbusB[27]), (fbusA[31]&fbusB[28]), (fbusA[31]&fbusB[29]), (fbusA[31]&fbusB[30]), (fbusA[31]&fbusB[31])};
 
-	multOut <= ((((pp0+pp1)+(pp2+pp3))+((pp4+pp5)+(pp6+pp7)))+(((pp8+pp9)+(pp10+pp11))+((pp12+pp13)+(pp14+pp15))))+((((pp16+pp17)+(pp18+pp19))+((pp20+pp21)+(pp22+pp23)))+(((pp24+pp25)+(pp26+pp27))+((pp28+pp29)+(pp30+pp31))));
+	//multOut <= ((((pp0+pp1)+(pp2+pp3))+((pp4+pp5)+(pp6+pp7)))+(((pp8+pp9)+(pp10+pp11))+((pp12+pp13)+(pp14+pp15))))+((((pp16+pp17)+(pp18+pp19))+((pp20+pp21)+(pp22+pp23)))+(((pp24+pp25)+(pp26+pp27))+((pp28+pp29)+(pp30+pp31))));
 
 
         if (multOut>2147483648)
@@ -155,6 +223,7 @@ module alufpu(regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,AL
                 FPUout <= multuOut;
 
         fp_branch = 0;
-        
+
         end
+        
 endmodule

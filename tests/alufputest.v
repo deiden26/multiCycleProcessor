@@ -1,17 +1,18 @@
 module alufputest;
-        reg [31:0] BUSA, BUSB, FBUSA, FBUSB;
-	reg [3:0] ALUCTRL;
-        reg FPUCTRL;
-        wire [31:0] FPUOUT, ALUOUT;
-	wire GP_BRANCH, FP_BRANCH;
+        reg [0:31] FBUSA, FBUSB;
+	reg [0:3] ALUCTRL;
+	reg CLOCK;
+        reg FPUCTRL, ISMULT;
+        wire [0:31] FPUOUT, ALUOUT;
+	wire GP_BRANCH, FP_BRANCH, MULTSTALL;
 
-        alufpu ALUFPU(.busA(BUSA), .busB(BUSB), .ALUctrl(ALUCTRL), .fbusA(FBUSA), .fbusB(FBUSB), .FPUctrl(FPUCTRL), .ALUout(ALUOUT), .FPUout(FPUOUT), .gp_branch(GP_BRANCH), .fp_branch(FP_BRANCH));
+        alufpu ALUFPU(.clock(CLOCK), .multStall(MULTSTALL), .ALUctrl(ALUCTRL), .fbusA(FBUSA), .fbusB(FBUSB), .FPUctrl(FPUCTRL), .isMult(ISMULT), .ALUout(ALUOUT), .FPUout(FPUOUT), .gp_branch(GP_BRANCH), .fp_branch(FP_BRANCH));
 
        initial begin
-        $monitor("FBUSA = %d FBUSB = %d FPUCTRL = %b FPUOUT = %d", FBUSA, FBUSB, FPUCTRL, FPUOUT);
-//      #0 BUSA=2; BUSB=4; ALUCTRL=0;
-//	#1 BUSA=$signed(-1); ALUCTRL=1;
-//	#1 ALUCTRL=2;
+        $monitor("MULTSTALL = %d FPUOUT = %d ALUOUT = %d", MULTSTALL, FPUOUT, ALUOUT);
+  //      #0 CLOCK=0; BUSA=2; BUSB=4; ALUCTRL=0; ISMULT=0;
+//	#60 BUSA=$signed(-1); ALUCTRL=1;
+//	#110 ALUCTRL=2;
 //	#1 BUSA=28; ALUCTRL=3;
 //	#1 BUSA=36; ALUCTRL=4;
 //	#1 BUSA=32; BUSB=0; ALUCTRL=5;
@@ -25,11 +26,14 @@ module alufputest;
 //	#1 BUSA=40;
 //	#1 BUSB=32; ALUCTRL=14;
 
-	#0 FBUSA=2; FBUSB=8; FPUCTRL=0;
-	#1 FBUSB=-8;
-	#1 FPUCTRL=1;
-	#1 FBUSA=35;
-	#1 FBUSA=1000; FBUSB=2000;
-        end
+	#160 CLOCK=0; FBUSA=5000; FBUSB=2; FPUCTRL=0; ISMULT=1;
+	#4060 ISMULT=0; ALUCTRL=3;
+
+	end
+
+	always
+		#50 CLOCK=!CLOCK;
+	initial
+		#8000 $finish;
 endmodule
 
