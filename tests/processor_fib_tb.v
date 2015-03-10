@@ -49,6 +49,7 @@ module processor_tb();
 			clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
 	end
     initial begin
+		$monitor("instr: %x", instr);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
@@ -72,7 +73,7 @@ module processor_tb();
 
 		//Start clock
 
-		#0 clock = 0;
+		#0 clock = 1;
 		#0 reset = 1;
 		//Reset registers for 1 cycle
 
@@ -82,9 +83,9 @@ module processor_tb();
 
 	always begin
 		if(^instr === 1'bx && reset === 0) begin
-			$display("Final memory");
-			for(i=8192; i < 8376; i = i+4)
-				$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
+			// $display("Final memory");
+			// for(i=8192; i < 8376; i = i+4)
+			// 	$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
 			$finish;
 		end
 		else

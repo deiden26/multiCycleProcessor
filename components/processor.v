@@ -30,20 +30,12 @@ module processor(
 		//Pipe register stalls
 		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
 
-	/*~~~~~ 32 Bit Signals  ~~~~~*/
-	logic [0:31]
-		//IF stage
-		if_operand_a, if_pc_plus_8, if_instr,
+	/*~~~~~ 2 Bit Signals  ~~~~~*/
+	logic [0:1]
 		//ID stage
-		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b,
+		id_op_a_sel, id_op_b_sel,
 		//EX stage
-		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b,
-		//MEM stage
-		mem_alu_out, mem_fpu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
-		//WB stage
-		wb_alu_out, wb_fpu_out, wb_operand_a, wb_f_operand_a, wb_mem_data, wb_pc_plus_8,
-		//WB-ID connections
-		bus_w, fbus_w;
+		ex_op_a_sel, ex_op_b_sel;
 
 	/*~~~~~ 4 Bit Signals  ~~~~~*/
 	logic [0:3]
@@ -60,6 +52,22 @@ module processor(
 		ex_rw, mem_rw,
 		//WB stage
 		wb_rw;
+
+	/*~~~~~ 32 Bit Signals  ~~~~~*/
+	logic [0:31]
+		//IF stage
+		if_operand_a, if_pc_plus_8, if_instr,
+		//ID stage
+		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b,
+		//EX stage
+		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b,
+		//MEM stage
+		mem_alu_out, mem_fpu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
+		//WB stage
+		wb_alu_out, wb_fpu_out, wb_operand_a, wb_f_operand_a, wb_mem_data, wb_pc_plus_8,
+		//WB-ID connections
+		bus_w, fbus_w;
+
 
 	/*~~~~~ IFU Stage ~~~~~*/
 	ifu IFU(
@@ -138,7 +146,9 @@ module processor(
 		.MEM_SIGN_EXT(id_mem_sign_extend),
 		.JAL_INSTR(id_jal_instr),
 		.JUMP_USE_REG(id_jump_use_reg),
-		.Stall_ID(ld_stall)
+		.Stall_ID(ld_stall),
+		.OP_A_SEL(id_op_a_sel),
+		.OP_B_SEL(id_op_b_sel)
 	);
 
 	/*~~~~~ ID EX Pipe Register ~~~~~*/
@@ -164,6 +174,8 @@ module processor(
 			ex_alu_src <= 1'b0;
 			ex_rw <= 4'b0000;
 			ex_reg_we <= 1'b0;
+			ex_op_a_sel <= 2'b00;
+			ex_op_b_sel <= 2'b00;
 
 			ex_pc_plus_8 <= 32'b0;
 		end
@@ -188,6 +200,8 @@ module processor(
 			ex_alu_src <= ex_alu_src;
 			ex_rw <= ex_rw;
 			ex_reg_we <= ex_reg_we;
+			ex_op_a_sel <= ex_op_a_sel;
+			ex_op_b_sel <= ex_op_b_sel;
 
 			ex_pc_plus_8 <= ex_pc_plus_8;
 		end
@@ -212,6 +226,8 @@ module processor(
 			ex_alu_src <= id_alu_src;
 			ex_rw <= id_rw;
 			ex_reg_we <= id_reg_we;
+			ex_op_a_sel <= id_op_a_sel;
+			ex_op_b_sel <= id_op_b_sel;
 
 			ex_pc_plus_8 <= id_pc_plus_8;
 		end
@@ -222,11 +238,11 @@ module processor(
 	alufpu ALUFPU(
 		.regA(ex_operand_a),
 		.regB(ex_operand_b),
-		.res_EX_MEM(),
-		.res_MEM_WB(),
+		.res_EX_MEM(mem_alu_out),
+		.res_MEM_WB(bus_w),
 		.ALU_SRC(ex_alu_src),
-		.busA_sel(),
-		.busB_sel(),
+		.busA_sel(ex_op_a_sel),
+		.busB_sel(ex_op_b_sel),
 		.ALUctrl(ex_alu_ctrl_bits),
 		.fbusA(ex_f_operand_a),
 		.fbusB(ex_f_operand_b),

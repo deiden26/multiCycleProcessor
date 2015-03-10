@@ -29,12 +29,13 @@ module ID_Stage(
 	output MEM_SIGN_EXT,
 	output JAL_INSTR,
 	output JUMP_USE_REG,
-	output Stall_ID
+	output Stall_ID,
+	output [0:1] OP_A_SEL,
+	output [0:1] OP_B_SEL
 	);
 
 logic temp_REG_DST, temp_R_31, temp_F_REG_WR, temp_IMM_ZERO, temp_EXT_OP;
 logic [0:31] temp_bus_A,temp_bus_B, temp_f_bus_B;
-logic [0:1] OP_A_SEL,OP_B_SEL;
 logic [0:4] Rs;
 logic [0:4] Rt;
 logic [0:4] Rd;
