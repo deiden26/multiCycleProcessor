@@ -20,13 +20,13 @@ module processor(
 		//If stage
 		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
 		//ID stage
-		id_branch, id_jump, id_fpu_ctrl_bits, id_write_enable, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall,
+		id_branch, id_jump, id_fpu_ctrl_bits, id_mem_we, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall, id_alu_src, id_reg_we,
 		//EX stage
-		ex_fpu_ctrl_bits, ex_branch, ex_write_enable, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg, ex_gp_branch, ex_fp_branch,
+		ex_fpu_ctrl_bits, ex_branch, ex_mem_we, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg, ex_gp_branch, ex_fp_branch, ex_alu_src, ex_reg_we,
 		//MEM stage
-		mem_write_enable, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr,
+		mem_mem_we, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr, mem_reg_we,
 		//WB stage
-		wb_jal_instr, wb_mem_to_reg, wb_mov_instr,
+		wb_jal_instr, wb_mem_to_reg, wb_mov_instr, wb_reg_we,
 		//Pipe register stalls
 		if_id_stall, id_ex_stall, ex_mem_stall, mem_wb_stall;
 
@@ -51,6 +51,15 @@ module processor(
 		id_alu_ctrl_bits,
 		//EX stage
 		ex_alu_ctrl_bits;
+
+	/*~~~~~ 5 Bit Signals  ~~~~~*/
+	logic [0:4]
+		//ID stage
+		id_rw, 
+		//EX stage
+		ex_rw, mem_rw,
+		//WB stage
+		wb_rw;
 
 	/*~~~~~ IFU Stage ~~~~~*/
 	ifu IFU(
@@ -104,9 +113,13 @@ module processor(
 		.instruction(id_instr),
 		.BUS_W(bus_w),
 		.FBUS_W(fbus_w),
-		.Rw_ID_EX(),
-		.Rw_EX_MEM(),
-		.LD_from_ID_EX(),
+		.Rw_ID_EX(ex_rw),
+		.Rw_EX_MEM(mem_rw),
+		.LD_from_ID_EX(ex_mem_to_reg),
+		.Rw_in(wb_rw),
+		.reg_we_in(wb_reg_we),
+		.reg_we_out(id_reg_we),
+		.Rw_out(id_rw),
 		.OPERAND_A(id_operand_a),
 		.OPERAND_B(id_operand_b),
 		.BUS_B(id_bus_b),
@@ -116,8 +129,8 @@ module processor(
 		.JUMP(id_jump),
 		.ALU_CTRL_BITS(id_alu_ctrl_bits),
 		.FPU_CTRL_BITS(id_fpu_ctrl_bits),
-		.ALU_SRC(),
-		.MEM_WR(id_write_enable),
+		.ALU_SRC(id_alu_src),
+		.MEM_WR(id_mem_we),
 		.MEM_TO_REG(id_mem_to_reg),
 		.MOV_INSTR(id_mov_instr),
 		.MEM_BYTE_OP(id_mem_byte),
@@ -140,7 +153,7 @@ module processor(
 			ex_jump <= 1'b0;
 			ex_alu_ctrl_bits <= 2'b0;
 			ex_fpu_ctrl_bits <= 1'b0;
-			ex_write_enable <= 1'b0;
+			ex_mem_we <= 1'b0;
 			ex_mem_to_reg <= 1'b0;
 			ex_mov_instr <= 1'b0;
 			ex_mem_byte <= 1'b0;
@@ -148,6 +161,9 @@ module processor(
 			ex_mem_sign_extend <= 1'b0;
 			ex_jal_instr <= 1'b0;
 			ex_jump_use_reg <= 1'b0;
+			ex_alu_src <= 1'b0;
+			ex_rw <= 4'b0000;
+			ex_reg_we <= 1'b0;
 
 			ex_pc_plus_8 <= 32'b0;
 		end
@@ -161,7 +177,7 @@ module processor(
 			ex_jump <= ex_jump;
 			ex_alu_ctrl_bits <= ex_alu_ctrl_bits;
 			ex_fpu_ctrl_bits <= ex_fpu_ctrl_bits;
-			ex_write_enable <= ex_write_enable;
+			ex_mem_we <= ex_mem_we;
 			ex_mem_to_reg <= ex_mem_to_reg;
 			ex_mov_instr <= ex_mov_instr;
 			ex_mem_byte <= ex_mem_byte;
@@ -169,6 +185,9 @@ module processor(
 			ex_mem_sign_extend <= ex_mem_sign_extend;
 			ex_jal_instr <= ex_jal_instr;
 			ex_jump_use_reg <= if_jump_use_reg;
+			ex_alu_src <= ex_alu_src;
+			ex_rw <= ex_rw;
+			ex_reg_we <= ex_reg_we;
 
 			ex_pc_plus_8 <= ex_pc_plus_8;
 		end
@@ -182,7 +201,7 @@ module processor(
 			ex_jump <= id_jump;
 			ex_alu_ctrl_bits <= id_alu_ctrl_bits;
 			ex_fpu_ctrl_bits <= id_fpu_ctrl_bits;
-			ex_write_enable <= id_write_enable;
+			ex_mem_we <= id_mem_we;
 			ex_mem_to_reg <= id_mem_to_reg;
 			ex_mov_instr <= id_mov_instr;
 			ex_mem_byte <= id_mem_byte;
@@ -190,6 +209,9 @@ module processor(
 			ex_mem_sign_extend <= id_mem_sign_extend;
 			ex_jal_instr <= id_jal_instr;
 			ex_jump_use_reg <= id_jump_use_reg;
+			ex_alu_src <= id_alu_src;
+			ex_rw <= id_rw;
+			ex_reg_we <= id_reg_we;
 
 			ex_pc_plus_8 <= id_pc_plus_8;
 		end
@@ -202,9 +224,9 @@ module processor(
 		.regB(ex_operand_b),
 		.res_EX_MEM(),
 		.res_MEM_WB(),
-		.ALU_SRC(),
+		.ALU_SRC(ex_alu_src),
 		.busA_sel(),
-		.busB_sel
+		.busB_sel(),
 		.ALUctrl(ex_alu_ctrl_bits),
 		.fbusA(ex_f_operand_a),
 		.fbusB(ex_f_operand_b),
@@ -213,7 +235,7 @@ module processor(
 		.FPUout(ex_fpu_out),
 		.gp_branch(ex_gp_branch),
 		.fp_branch(ex_fp_branch),
-		.mul_stall(mul_stall)
+		.multStall(mul_stall)
 	);
 
 	/*~~~~~ EX MEM Pipe Register ~~~~~*/
@@ -226,13 +248,15 @@ module processor(
 			mem_f_operand_a <= 32'b0;
 			mem_bus_b <= 32'b0;
 			mem_f_operand_b <= 32'b0;
-			mem_write_enable <= 1'b0;
+			mem_mem_we <= 1'b0;
 			mem_mem_byte <= 1'b0;
 			mem_mem_half_word <= 1'b0;
 			mem_mem_sign_extend <= 1'b0;
 			mem_jal_instr <= 1'b0;
 			mem_mem_to_reg <= 1'b0;
 			mem_mov_instr <= 1'b0;
+			mem_rw <= 4'b0000;
+			mem_reg_we <= 1'b0;
 
 			mem_pc_plus_8 <= 32'b0;
 		end
@@ -244,13 +268,15 @@ module processor(
 			mem_f_operand_a <= mem_f_operand_a;
 			mem_bus_b <= mem_bus_b;
 			mem_f_operand_b <= mem_f_operand_b;
-			mem_write_enable <= mem_write_enable;
+			mem_mem_we <= mem_mem_we;
 			mem_mem_byte <= mem_mem_byte;
 			mem_mem_half_word <= mem_mem_half_word;
 			mem_mem_sign_extend <= mem_mem_sign_extend;
 			mem_jal_instr <= mem_jal_instr;
 			mem_mem_to_reg <= mem_mem_to_reg;
 			mem_mov_instr <= mem_mov_instr;
+			mem_rw <= mem_rw;
+			mem_reg_we <= mem_reg_we;
 
 			mem_pc_plus_8 <= mem_pc_plus_8;
 		end
@@ -262,13 +288,15 @@ module processor(
 			mem_f_operand_a <= ex_f_operand_a;
 			mem_bus_b <= ex_bus_b;
 			mem_f_operand_b <= ex_f_operand_b;
-			mem_write_enable <= ex_write_enable;
+			mem_mem_we <= ex_mem_we;
 			mem_mem_byte <= ex_mem_byte;
 			mem_mem_half_word <= ex_mem_half_word;
 			mem_mem_sign_extend <= ex_mem_sign_extend;
 			mem_jal_instr <= ex_jal_instr;
 			mem_mem_to_reg <= ex_mem_to_reg;
 			mem_mov_instr <= ex_mov_instr;
+			mem_rw <= ex_rw;
+			mem_reg_we <= ex_reg_we;
 
 			mem_pc_plus_8 <= ex_pc_plus_8;
 		end
@@ -282,7 +310,7 @@ module processor(
 		.addr_from_proc(mem_alu_out),
 		.gp_data_from_proc(mem_bus_b),
 		.fp_data_from_proc(mem_f_operand_b),
-		.write_enable_from_proc(mem_write_enable),
+		.write_enable_from_proc(mem_mem_we),
 		.byte_from_proc(mem_mem_byte),
 		.half_word_from_proc(mem_mem_half_word),
 		.sign_extend_from_proc(mem_mem_sign_extend),
@@ -291,7 +319,7 @@ module processor(
 		//Connections to memory
 		.addr_to_mem(addr_to_mem),
 		.data_to_mem(data_to_mem),
-		.write_enable_to_mem(write_enable_to_mem),
+		.write_enable_to_mem(mem_we_to_mem),
 		.byte_to_mem(byte_to_mem),
 		.half_word_to_mem(half_word_to_mem),
 		.sign_extend_to_mem(sign_extend_to_mem),
@@ -310,6 +338,8 @@ module processor(
 			wb_f_operand_a <= 32'b0;
 			wb_jal_instr <= 1'b0;
 			wb_mem_to_reg <= 1'b0;
+			wb_rw <= 4'b0000;
+			wb_reg_we <= 1'b0;
 
 			wb_pc_plus_8 <= 32'b0;
 		end
@@ -322,6 +352,8 @@ module processor(
 			wb_f_operand_a <= wb_f_operand_a;
 			wb_jal_instr <= wb_jal_instr;
 			wb_mem_to_reg <= wb_mem_to_reg;
+			wb_rw <= wb_rw;
+			wb_reg_we <= wb_reg_we;
 
 			wb_pc_plus_8 <= wb_pc_plus_8;
 		end
@@ -334,6 +366,8 @@ module processor(
 			wb_f_operand_a <= mem_f_operand_a;
 			wb_jal_instr <= mem_jal_instr;
 			wb_mem_to_reg <= mem_mem_to_reg;
+			wb_rw <= mem_rw;
+			wb_reg_we <= mem_reg_we;
 
 			wb_pc_plus_8 <= mem_pc_plus_8;
 		end
