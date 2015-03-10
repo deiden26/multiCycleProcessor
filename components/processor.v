@@ -56,11 +56,11 @@ module processor(
 	/*~~~~~ 32 Bit Signals  ~~~~~*/
 	logic [0:31]
 		//IF stage
-		if_operand_a, if_pc_plus_8, if_instr,
+		if_operand_a, if_pc_plus_8, if_instr, if_branch_offset, if_jump_offset,
 		//ID stage
-		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b,
+		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b, id_jump_offset,
 		//EX stage
-		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b,
+		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b, ex_jump_offset,
 		//MEM stage
 		mem_alu_out, mem_fpu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
 		//WB stage
@@ -79,6 +79,8 @@ module processor(
 		.jump (if_jump),                   // jump signal
 		.use_reg (if_jump_use_reg),                // if JR or JALR
 		.stall (if_stall),
+		.branch_offset (if_branch_offset),
+		.jump_offset (if_jump_offset),
 		.pc_from_reg (if_operand_a),            // use if use_reg is TRUE
 		.inst_from_mem (inst_from_mem),          // Data coming back from instruction-memory
 
@@ -96,6 +98,8 @@ module processor(
 		if_jump_use_reg <= ex_jump_use_reg;
 		if_operand_a <= ex_operand_a;
 		if_stall <= ld_stall | mul_stall;
+		if_branch_offset <= ex_bus_b;
+		if_jump_offset <= ex_jump_offset;
 	end
 
 	/*~~~~~ IFU ID Pipe Register ~~~~~*/
@@ -125,6 +129,7 @@ module processor(
 		.Rw_EX_MEM(mem_rw),
 		.LD_from_ID_EX(ex_mem_to_reg),
 		.Rw_in(wb_rw),
+		.jump_offset (id_jump_offset),
 		.reg_we_in(wb_reg_we),
 		.reg_we_out(id_reg_we),
 		.Rw_out(id_rw),
@@ -176,6 +181,7 @@ module processor(
 			ex_reg_we <= 1'b0;
 			ex_op_a_sel <= 2'b00;
 			ex_op_b_sel <= 2'b00;
+			ex_jump_offset <= 32'b0;
 
 			ex_pc_plus_8 <= 32'b0;
 		end
@@ -202,6 +208,7 @@ module processor(
 			ex_reg_we <= ex_reg_we;
 			ex_op_a_sel <= ex_op_a_sel;
 			ex_op_b_sel <= ex_op_b_sel;
+			ex_jump_offset <= ex_jump_offset;
 
 			ex_pc_plus_8 <= ex_pc_plus_8;
 		end
@@ -228,6 +235,7 @@ module processor(
 			ex_reg_we <= id_reg_we;
 			ex_op_a_sel <= id_op_a_sel;
 			ex_op_b_sel <= id_op_b_sel;
+			ex_jump_offset <= id_jump_offset;
 
 			ex_pc_plus_8 <= id_pc_plus_8;
 		end

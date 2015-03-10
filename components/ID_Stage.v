@@ -9,6 +9,7 @@ module ID_Stage(
 	input  LD_from_ID_EX,
 	input reg_we_in,
 	input [0:4] Rw_in,
+	output logic [0:31] jump_offset,
 	output reg_we_out,
 	output logic [0:4] Rw_out,
 	output logic [0:31] OPERAND_A,
@@ -108,6 +109,7 @@ always @(*) begin
 	Rs = instruction[6:10];
 	Rt = instruction[11:15];
 	Rd = instruction[16:20];
+	jump_offset = instruction[6:31];
 	
 	case(temp_REG_DST)
 		0: Rd_or_Rt = Rt;
