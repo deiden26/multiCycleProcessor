@@ -49,7 +49,8 @@ module processor_tb();
 		// 	clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
 	end
     initial begin
-		$monitor("clock:%b \t instr: %x \t alu out: %d", clock, PROCESSOR.id_instr, PROCESSOR.ex_alu_out);
+		$monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b"
+		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_a_sel);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
