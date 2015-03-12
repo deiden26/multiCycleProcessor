@@ -7,8 +7,13 @@ module ID_Stage(
 	input [0:4] Rw_ID_EX,
 	input [0:4] Rw_EX_MEM,
 	input  LD_from_ID_EX,
-	output logic [0:4] Rw,
-	output logic [0:4] F_Rw,
+	input reg_we_in,
+	input reg_we_from_ID_EX,
+	input reg_we_from_EX_MEM,
+	input [0:4] Rw_in,
+	output logic [0:31] jump_offset,
+	output reg_we_out,
+	output logic [0:4] Rw_out,
 	output logic [0:31] OPERAND_A,
 	output logic [0:31] OPERAND_B,
 	output logic [0:31] BUS_B,
@@ -27,15 +32,17 @@ module ID_Stage(
 	output MEM_SIGN_EXT,
 	output JAL_INSTR,
 	output JUMP_USE_REG,
-	output Stall_ID
+	output Stall_ID,
+	output [0:1] OP_A_SEL,
+	output [0:1] OP_B_SEL
 	);
 
-logic temp_REG_DST, temp_R_31, temp_REG_WR, temp_F_REG_WR, temp_IMM_ZERO, temp_EXT_OP;
+logic temp_REG_DST, temp_R_31, temp_F_REG_WR, temp_IMM_ZERO, temp_EXT_OP;
 logic [0:31] temp_bus_A,temp_bus_B, temp_f_bus_B;
-logic [0:1] OP_A_SEL,OP_B_SEL;
 logic [0:4] Rs;
 logic [0:4] Rt;
 logic [0:4] Rd;
+logic [0:4] Rd_or_Rt;
 logic [0:15]IMM_FIELD;
 logic [0:31] IMM_FIELD_EXT;
 
@@ -45,7 +52,7 @@ reg [0:4] Rw_Buffer[0:1];
 control_logic control_0(
 	.instruction(instruction),
 	.REG_DST(temp_REG_DST),
-	.REG_WR(temp_REG_WR),
+	.REG_WR(reg_we_out),
 	.F_REG_WR(temp_F_REG_WR),
 	.BRANCH(BRANCH),
 	.JUMP(JUMP),
@@ -67,14 +74,11 @@ control_logic control_0(
 gprFile gprFile0(
 	.clk(clk),
 	.reset(reset),
-	.regWr(temp_REG_WR),
+	.regWr(reg_we_in),
 	.Rs(Rs),
 	.Rt(Rt),
-	.Rd(Rd),
-	.Rdst(temp_REG_DST),
-	.jal_instr(JAL_INSTR),
+	.Rw(Rw_in),
 	.busW(BUS_W),
-	.Rw(Rw),
 	.busA(temp_bus_A),
 	.busB(temp_bus_B)
 	);
@@ -82,23 +86,24 @@ gprFile gprFile0(
 fprFile fprFile0(
 	.clk(clk),
 	.reset(reset),
-	.regWr(temp_F_REG_WR),
+	.regWr(reg_we_in),
 	.Rs(Rs),
 	.Rt(Rt),
-	.Rd(Rd),
-	.Rdst(temp_REG_DST),
+	.Rw(Rw_in),
 	.busW(FBUS_W),
-	.Rw(F_Rw),
 	.busA(F_OPERAND_A),
 	.busB(F_OPERAND_B)
 	);
 
 hazardDetector hD(
+	.opcode(instruction[0:5]),
 	.Rs_ID(Rs),
 	.Rt_ID(Rt),
 	.ALU_SRC(ALU_SRC),
 	.Rw_ID_EX(Rw_ID_EX),
 	.Rw_EX_MEM(Rw_EX_MEM),
+	.we_ID_EX(reg_we_from_ID_EX),
+	.we_EX_MEM(reg_we_from_EX_MEM),
 	.LD_ID_EX(LD_from_ID_EX),
 	.Stall_ID(Stall_ID),
 	.OP_A_SEL(OP_A_SEL),
@@ -106,11 +111,23 @@ hazardDetector hD(
 	);
 
 always @(*) begin
-Rs = instruction[6:10];
-Rt = instruction[11:15];
-Rd = instruction[16:20];
+	Rs = instruction[6:10];
+	Rt = instruction[11:15];
+	Rd = instruction[16:20];
+	jump_offset = instruction[6:31];
+	
+	case(temp_REG_DST)
+		0: Rd_or_Rt = Rt;
+		1: Rd_or_Rt = Rd;
+	endcase
 
-IMM_FIELD = (temp_IMM_ZERO == 1) ? 16'h0 : instruction[16:31];
+	case(JAL_INSTR)
+		0: Rw_out = Rd_or_Rt;
+		1: Rw_out = 5'b11111;
+	endcase
+
+
+	IMM_FIELD = (temp_IMM_ZERO == 1) ? 16'h0 : instruction[16:31];
 
 
 	OPERAND_A = temp_bus_A;

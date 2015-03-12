@@ -73,7 +73,7 @@ module processor_tb();
 
 		//Start clock
 
-		#0 clock = 0;
+		#0 clock = 1;
 		#0 reset = 1;
 		//Reset registers for 1 cycle
 

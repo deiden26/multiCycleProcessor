@@ -1,4 +1,4 @@
-module alufpu(clock, regA, regB, FWD_FROM_EX_MEM, FWD_FROM_MEM_WB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
+module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
 	input [0:31] regA, regB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
 	input [0:3] ALUctrl;
 	input FPUctrl, isMult, clock, ALU_SRC;

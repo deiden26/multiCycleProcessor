@@ -1,9 +1,12 @@
 module hazardDetector(
+	input logic [0:5] opcode,
 	input logic [0:4] Rs_ID,
 	input logic [0:4] Rt_ID,
 	input logic ALU_SRC,
 	input logic [0:4] Rw_ID_EX,
 	input logic [0:4] Rw_EX_MEM,
+	input we_ID_EX,
+	input we_EX_MEM,
 	input LD_ID_EX,
 	output logic Stall_ID,
 	output logic [0:1] OP_A_SEL,
@@ -18,7 +21,7 @@ always @(*) begin
 
 	//Determine Rs Forwarding
 
-	if(Rs_ID == Rw_ID_EX) begin
+	if(Rs_ID == Rw_ID_EX && we_ID_EX== 1) begin
 			if(LD_ID_EX ==1)
 				Stall_ID = 1;
 			else
@@ -26,7 +29,7 @@ always @(*) begin
 
 	end //if(Rs_ID == Rw_ID_EX)
 
-	else if(Rs_ID == Rw_EX_MEM)
+	else if(Rs_ID == Rw_EX_MEM && we_EX_MEM ==1)
 		OP_A_SEL = FWD_FROM_MEM_WB;
 
 	else
@@ -35,9 +38,9 @@ always @(*) begin
 
 	//Determine Rt Forwarding if applicable
 
-	if(ALU_SRC == 0) begin
+	if(ALU_SRC == 0 || (opcode == SB || opcode == SH || opcode == SW) ) begin
 
-		if(Rt_ID == Rw_ID_EX) begin
+		if(Rt_ID == Rw_ID_EX && we_ID_EX ==1 ) begin
 			if(LD_ID_EX ==1)
 				Stall_ID = 1;
 			else
@@ -45,7 +48,7 @@ always @(*) begin
 					
 		end //if(Rt_ID == Rw_ID_EX)
 
-		else if(Rt_ID == Rw_EX_MEM)
+		else if(Rt_ID == Rw_EX_MEM && we_EX_MEM ==1)
 			OP_B_SEL = FWD_FROM_MEM_WB;
 
 		else

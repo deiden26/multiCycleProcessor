@@ -44,11 +44,13 @@ module processor_tb();
 	always begin
 		//Clock cycle is 100
 		#100 clock = !clock;
-		if((instr == 32'hac612000 || instr == 32'hac622000) && clock ==1)
-			$display("clock = %b \t reset = %b \t iaddr = %x \t instruction = %x \t addr_to_mem = %x \tdata_to_mem =%d \t data_from_mem =%x\n\n",
-			clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
+		// if((instr == 32'hac612000 || instr == 32'hac622000) && clock ==1)
+		// 	$display("clock = %b \t reset = %b \t iaddr = %x \t instruction = %x \t addr_to_mem = %x \tdata_to_mem =%d \t data_from_mem =%x\n\n",
+		// 	clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
 	end
     initial begin
+		$monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b"
+		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_b_sel);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
@@ -72,7 +74,7 @@ module processor_tb();
 
 		//Start clock
 
-		#0 clock = 0;
+		#0 clock = 1;
 		#0 reset = 1;
 		//Reset registers for 1 cycle
 
@@ -82,9 +84,9 @@ module processor_tb();
 
 	always begin
 		if(^instr === 1'bx && reset === 0) begin
-			$display("Final memory");
-			for(i=8192; i < 8376; i = i+4)
-				$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
+			// $display("Final memory");
+			// for(i=8192; i < 8376; i = i+4)
+			// 	$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
 			$finish;
 		end
 		else

@@ -17,6 +17,8 @@ module ifu(
 	input jump,                   // jump signal
 	input use_reg,                // if JR or JALR
 	input stall,
+	input [0:31] branch_offset, 
+	input [0:31] jump_offset,
 	input [0:31] pc_from_reg,            // use if use_reg is TRUE
 	input  [0:31] inst_from_mem,          // Data coming back from instruction-memory
 
@@ -24,9 +26,6 @@ module ifu(
 	output [0:31] pc_8_out,               // PC of to store in reg31 for JAL & JALR (PC+8)
 	output [0:31] inst_out                // fetched instruction out
 );
-
-	reg [0:31] branch_offset;
-	reg [0:31] jump_offset;
 
 	wire [0:31] pc_plus_4;               // Default next pc
 
@@ -43,9 +42,6 @@ module ifu(
 
 	// Pass PC+8 out to reg31
 	assign pc_8_out = pc_plus_4 + 4;
-
-	assign branch_offset = $signed(inst_out[16:31]);
-	assign jump_offset = $signed(inst_out[6:31]);
 
 	// calculate next pc
 	always @(*) begin
