@@ -98,7 +98,7 @@ module processor(
 		if_jump_use_reg <= ex_jump_use_reg;
 		if_operand_a <= ex_operand_a;
 		if_stall <= ld_stall | mul_stall;
-		if_branch_offset <= ex_operand_b;
+		if_branch_offset <= ex_bus_b;
 		if_jump_offset <= ex_jump_offset; 
 	end
 
@@ -108,7 +108,7 @@ module processor(
 			id_instr <= 32'b0;
 			id_pc_plus_8 <= 32'b0;
 		end
-		else if (if_id_stall) begin
+		else if (mul_stall) begin
 			id_instr <= id_instr;
 			id_pc_plus_8 <= id_pc_plus_8;
 		end
@@ -187,7 +187,7 @@ module processor(
 
 			ex_pc_plus_8 <= 32'b0;
 		end
-		else if (id_ex_stall) begin
+		else if (mul_stall) begin
 			ex_operand_a <= ex_operand_a;
 			ex_operand_b <= ex_operand_b;
 			ex_bus_b <= ex_bus_b;
@@ -286,7 +286,7 @@ module processor(
 
 			mem_pc_plus_8 <= 32'b0;
 		end
-		else if (ex_mem_stall) begin
+		else if (mul_stall) begin
 			mem_alu_out <= mem_alu_out;
 			mem_fpu_out <= mem_fpu_out;
 
@@ -369,7 +369,7 @@ module processor(
 
 			wb_pc_plus_8 <= 32'b0;
 		end
-		else if (mem_wb_stall) begin
+		else if (mul_stall) begin
 			wb_mem_data <= wb_mem_data;
 
 			wb_alu_out <= wb_alu_out;

@@ -43,6 +43,7 @@ logic [0:4] Rs;
 logic [0:4] Rt;
 logic [0:4] Rd;
 logic [0:4] Rd_or_Rt;
+logic [0:5] opcode;
 logic [0:15]IMM_FIELD;
 logic [0:31] IMM_FIELD_EXT;
 
@@ -115,7 +116,7 @@ always @(*) begin
 	Rt = instruction[11:15];
 	Rd = instruction[16:20];
 	jump_offset = instruction[6:31];
-	
+	opcode = instruction[0:5];
 	case(temp_REG_DST)
 		0: Rd_or_Rt = Rt;
 		1: Rd_or_Rt = Rd;
@@ -132,13 +133,15 @@ always @(*) begin
 
 	OPERAND_A = temp_bus_A;
 
-	// IMM_FIELD_EXT = (temp_EXT_OP == 1) ? {{16{IMM_FIELD[15]}}, IMM_FIELD[0:15]} : {16'h0, IMM_FIELD[0:15]};
 	if (temp_EXT_OP == 1)
 		IMM_FIELD_EXT = $signed(IMM_FIELD);
 	else
 		IMM_FIELD_EXT = $unsigned(IMM_FIELD);
 
-	BUS_B = temp_bus_B;
+	if(opcode == BEQZ || opcode == BNEZ)
+		BUS_B = $signed(instruction[16:31]);
+	else
+		BUS_B = temp_bus_B;
 
 	if(ALU_SRC == 1)
 		OPERAND_B = IMM_FIELD_EXT;
