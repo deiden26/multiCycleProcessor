@@ -98,7 +98,7 @@ module processor(
 		if_jump_use_reg <= ex_jump_use_reg;
 		if_operand_a <= ex_operand_a;
 		if_stall <= ld_stall | mul_stall;
-		if_branch_offset <= ex_operand_b;
+		if_branch_offset <= ex_bus_b;
 		if_jump_offset <= ex_jump_offset; 
 	end
 
