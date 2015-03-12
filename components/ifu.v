@@ -47,13 +47,13 @@ module ifu(
 	always @(*) begin
 		//If branching, next_pc = pc + 4 + signExtend(inst_out[0:15])
 		if ((gp_branch || fp_branch) && branch)
-			next_pc <= pc_plus_4 + branch_offset;
+			next_pc <= current_pc + branch_offset;
 		//If JALR or JR, next_pc = reg31
 		else if (jump && use_reg)
 			next_pc <= pc_from_reg;
 		//If jumping (without reg), next_pc = pc + 4 + signExtend(inst_out[0:25])
 		else if (jump)
-			next_pc <= pc_plus_4 + jump_offset;
+			next_pc <= current_pc + jump_offset;
 		//Default: move to next word in mem, pc = pc + 4
 		else
 			next_pc <= pc_plus_4;
