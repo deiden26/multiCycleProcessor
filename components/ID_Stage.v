@@ -132,7 +132,6 @@ always @(*) begin
 
 	OPERAND_A = temp_bus_A;
 
-	// IMM_FIELD_EXT = (temp_EXT_OP == 1) ? {{16{IMM_FIELD[15]}}, IMM_FIELD[0:15]} : {16'h0, IMM_FIELD[0:15]};
 	if (temp_EXT_OP == 1)
 		IMM_FIELD_EXT = $signed(IMM_FIELD);
 	else

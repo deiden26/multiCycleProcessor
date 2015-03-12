@@ -49,8 +49,8 @@ module processor_tb();
 		// 	clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
 	end
     initial begin
-		$monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b"
-		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_b_sel);
+		$monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b \t if_branch: %b \t if_gp_branch: %b \t if_branch_offset: %d"
+		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_b_sel, PROCESSOR.if_branch, PROCESSOR.if_gp_branch, PROCESSOR.if_branch_offset);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
