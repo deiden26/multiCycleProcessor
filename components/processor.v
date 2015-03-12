@@ -98,8 +98,8 @@ module processor(
 		if_jump_use_reg <= ex_jump_use_reg;
 		if_operand_a <= ex_operand_a;
 		if_stall <= ld_stall | mul_stall;
-		if_branch_offset <= ex_bus_b;
-		if_jump_offset <= ex_jump_offset;
+		if_branch_offset <= ex_operand_b;
+		if_jump_offset <= ex_jump_offset; 
 	end
 
 	/*~~~~~ IFU ID Pipe Register ~~~~~*/
@@ -131,6 +131,8 @@ module processor(
 		.Rw_in(wb_rw),
 		.jump_offset (id_jump_offset),
 		.reg_we_in(wb_reg_we),
+		.reg_we_from_ID_EX(ex_reg_we), ////////////////
+		.reg_we_from_EX_MEM(mem_reg_we), ////////////////
 		.reg_we_out(id_reg_we),
 		.Rw_out(id_rw),
 		.OPERAND_A(id_operand_a),

@@ -8,6 +8,8 @@ module ID_Stage(
 	input [0:4] Rw_EX_MEM,
 	input  LD_from_ID_EX,
 	input reg_we_in,
+	input reg_we_from_ID_EX,
+	input reg_we_from_EX_MEM,
 	input [0:4] Rw_in,
 	output logic [0:31] jump_offset,
 	output reg_we_out,
@@ -94,11 +96,14 @@ fprFile fprFile0(
 	);
 
 hazardDetector hD(
+	.opcode(instruction[0:5]),
 	.Rs_ID(Rs),
 	.Rt_ID(Rt),
 	.ALU_SRC(ALU_SRC),
 	.Rw_ID_EX(Rw_ID_EX),
 	.Rw_EX_MEM(Rw_EX_MEM),
+	.we_ID_EX(reg_we_from_ID_EX),
+	.we_EX_MEM(reg_we_from_EX_MEM),
 	.LD_ID_EX(LD_from_ID_EX),
 	.Stall_ID(Stall_ID),
 	.OP_A_SEL(OP_A_SEL),
