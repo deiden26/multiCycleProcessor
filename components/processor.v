@@ -254,7 +254,7 @@ module processor(
 	if(ex_op_a_sel == FWD_FROM_EX_MEM)
 		fwd_ex_operand_a = mem_alu_out;
 	else if(ex_op_a_sel == FWD_FROM_MEM_WB)
-		fwd_ex_operand_a = wb_alu_out;
+		fwd_ex_operand_a = bus_w;
 	else 
 		fwd_ex_operand_a= ex_operand_a;
 
@@ -264,7 +264,7 @@ module processor(
 		if(ex_op_b_sel == FWD_FROM_EX_MEM)
 			fwd_ex_operand_b = mem_alu_out;
 		else if(ex_op_b_sel == FWD_FROM_MEM_WB)
-			fwd_ex_operand_b = wb_alu_out;
+			fwd_ex_operand_b = bus_w;
 		else 
 			fwd_ex_operand_b = ex_operand_b;
 	end

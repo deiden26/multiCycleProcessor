@@ -31,5 +31,6 @@ _loop:
     addu r5, r5, r4
     subi r6, r6, 4
     bnez r6, _loop
+	nop
     sw _result(r0), r5
 .endproc _usum
