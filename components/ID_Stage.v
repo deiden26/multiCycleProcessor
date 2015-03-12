@@ -116,7 +116,7 @@ always @(*) begin
 	Rt = instruction[11:15];
 	Rd = instruction[16:20];
 	jump_offset = instruction[6:31];
-	
+	opcode = instruction[0:5];
 	case(temp_REG_DST)
 		0: Rd_or_Rt = Rt;
 		1: Rd_or_Rt = Rd;
