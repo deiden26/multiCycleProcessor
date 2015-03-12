@@ -43,6 +43,7 @@ logic [0:4] Rs;
 logic [0:4] Rt;
 logic [0:4] Rd;
 logic [0:4] Rd_or_Rt;
+logic [0:5] opcode;
 logic [0:15]IMM_FIELD;
 logic [0:31] IMM_FIELD_EXT;
 
@@ -138,7 +139,10 @@ always @(*) begin
 	else
 		IMM_FIELD_EXT = $unsigned(IMM_FIELD);
 
-	BUS_B = temp_bus_B;
+	if(opcode == BEQZ || opcode == BNEZ)
+		BUS_B = $signed(instruction[16:31]);
+	else
+		BUS_B = temp_bus_B;
 
 	if(ALU_SRC == 1)
 		OPERAND_B = IMM_FIELD_EXT;
