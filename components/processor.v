@@ -381,7 +381,7 @@ module processor(
 		//Connections to memory
 		.addr_to_mem(addr_to_mem),
 		.data_to_mem(data_to_mem),
-		.write_enable_to_mem(mem_we_to_mem),
+		.write_enable_to_mem(write_enable_to_mem),
 		.byte_to_mem(byte_to_mem),
 		.half_word_to_mem(half_word_to_mem),
 		.sign_extend_to_mem(sign_extend_to_mem),
