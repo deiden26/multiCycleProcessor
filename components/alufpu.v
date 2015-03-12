@@ -1,10 +1,10 @@
-module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
-	input [0:31] regA, regB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
+module alufpu(clock, busA, busB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
+	input [0:31] busA, busB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
 	input [0:3] ALUctrl;
 	input FPUctrl, isMult, clock, ALU_SRC;
 	input [0:1] busA_sel, busB_sel;
 
-	reg [0:31] busA, busB;
+	//reg [0:31] busA, busB;
 	output [0:31] ALUout, FPUout;
 	reg [0:31] temp_busB;
 	reg[0:31] temp_busA;
@@ -23,27 +23,7 @@ module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	reg [0:31] pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7, pp8, pp9, pp10, pp11, pp12, pp13, pp14, pp15, pp16, pp17, pp18, pp19, pp20, pp21, pp22, pp23, pp24, pp25, pp26, pp27, pp28, pp29, pp30, pp31;
 
 
-	always@(*)
-	begin
 
-	if(busA_sel == FWD_FROM_EX_MEM)
-		busA = res_EX_MEM;
-	else if(busA_sel == FWD_FROM_MEM_WB)
-		busA = res_MEM_WB;
-	else 
-		busA = regA;
-
-	if(ALU_SRC == 1)
-		busB = regB;
-	else begin
-		if(busB_sel == FWD_FROM_EX_MEM)
-			busB = res_EX_MEM;
-		else if(busB_sel == FWD_FROM_MEM_WB)
-			busB = res_MEM_WB;
-		else 
-			busB = regB;
-	end
-	end
 
 	always@(posedge clock) begin
 		if (counter > 0)
