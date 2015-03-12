@@ -163,7 +163,7 @@ module processor(
 
 	/*~~~~~ ID EX Pipe Register ~~~~~*/
 	always @(posedge clock) begin
-		if (reset || ld_stall) begin
+		if (reset | ld_stall) begin
 			ex_operand_a <= 32'b0;
 			ex_operand_b <= 32'b0;
 			ex_bus_b <= 32'b0;
