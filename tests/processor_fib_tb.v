@@ -50,7 +50,7 @@ module processor_tb();
 	end
     initial begin
 		$monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b"
-		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_a_sel);
+		, PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_b_sel);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
