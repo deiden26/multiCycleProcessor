@@ -85,6 +85,8 @@ module processor_tb();
 
 	always begin
 		if(^instr === 1'bx && reset === 0) begin
+			for (i=0; i<4; i = i+1)
+				#100;
 			//Print memory
 			$display("Memory After");
 			for (i = 8192; i<8292; i = i+1) begin
