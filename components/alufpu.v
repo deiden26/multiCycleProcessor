@@ -20,6 +20,8 @@ module alufpu(clock, busA, busB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	reg [0:31]  seqOut, sneOut, sltOut, sgtOut, sleOut, sgeOut;
 	reg [0:31]  lhiOut;
 
+	reg [0:31] eqfOut, nefOut, ltfOut, gtfOut, lefOut, gefOut;
+
 	//make partial products
 	reg [0:31] pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7, pp8, pp9, pp10, pp11, pp12, pp13, pp14, pp15, pp16, pp17, pp18, pp19, pp20, pp21, pp22, pp23, pp24, pp25, pp26, pp27, pp28, pp29, pp30, pp31;
 
@@ -103,31 +105,43 @@ module alufpu(clock, busA, busB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	if (busA==busB) begin
 	seqOut <= 1;
 	sneOut <= 0;
+	eqfOut <= 8'h3F800000;
+	nefOut <= 0;
 	end
 	
 	else begin
 	seqOut <= 0;
 	sneOut <= 1;
+	eqfOut <= 0;
+	nefOut <= 8'h3F800000;
 	end
 
 	if (busA<=busB) begin
 	sleOut <= 1;
 	sgtOut <= 0;
+	lefOut <= 8'h3F800000;
+	gtfOut <= 0;
 	end
 
 	else begin
 	sleOut <= 0;
 	sgtOut <= 1;
+	lefOut <= 0;
+	gtfOut <= 8'h3F800000;
 	end
 
 	if (busA>=busB) begin
 	sgeOut <= 1;
 	sltOut <= 0;
+	gefOut <= 8'h3F800000;
+	ltfOut <= 0;
 	end
 
 	else begin
 	sgeOut <= 0;
 	sltOut <= 1;
+	gefOut <= 0;
+	ltfOut <= 8'h3F800000;
 	end
 
 	case (ALUctrl)
@@ -197,12 +211,12 @@ module alufpu(clock, busA, busB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
                 multuOut <= multOut;
 
 		case (FPUctrl)
-		0: FPUout <= seqOut;
-		1: FPUout <= sneOut;
-		2: FPUout <= sltOut;
-		3: FPUout <= sgtOut;
-		4: FPUout <= sleOut;
-		5: FPUout <= sgeOut;
+		0: FPUout <= eqfOut;
+		1: FPUout <= nefOut;
+		2: FPUout <= ltfOut;
+		3: FPUout <= gtfOut;
+		4: FPUout <= lefOut;
+		5: FPUout <= gefOut;
 		8: FPUout <= multOut;
 		9: FPUout <= multuOut;
 		endcase
