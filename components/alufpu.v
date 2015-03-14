@@ -1,7 +1,7 @@
-module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, isMult, multStall, ALUout, FPUout, gp_branch, fp_branch);
+module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB_sel,  ALUctrl, fbusA, fbusB, FPUctrl, multStall, ALUout, FPUout, gp_branch, fp_branch);
 	input [0:31] regA, regB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
-	input [0:3] ALUctrl;
-	input FPUctrl, isMult, clock, ALU_SRC;
+	input [0:3] ALUctrl, FPUctrl;
+	input clock, ALU_SRC;
 	input [0:1] busA_sel, busB_sel;
 
 	reg [0:31] busA, busB;
@@ -18,6 +18,8 @@ module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	reg [0:31]  orOut, andOut, xorOut;
 	reg [0:31]  seqOut, sneOut, sltOut, sgtOut, sleOut, sgeOut;
 	reg [0:31]  lhiOut;
+
+	reg [0:31] eqfOut, nefOut, ltfOut, gtfOut, lefOut, gefOut;
 
 	//make partial products
 	reg [0:31] pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7, pp8, pp9, pp10, pp11, pp12, pp13, pp14, pp15, pp16, pp17, pp18, pp19, pp20, pp21, pp22, pp23, pp24, pp25, pp26, pp27, pp28, pp29, pp30, pp31;
@@ -91,8 +93,8 @@ module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	always@(negedge clock)
 		multOut <= temp_busA + temp_busB;
 
-	always@(isMult) begin
-		if (isMult==1)
+	always@(FPUctrl[0]) begin
+		if (FPUctrl[0]==1)
 			counter <= 32;
 		else
 			counter <= 0;
@@ -122,31 +124,43 @@ module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	if (busA==busB) begin
 	seqOut <= 1;
 	sneOut <= 0;
+	eqfOut <= 32'h3F800000;
+	nefOut <= 0;
 	end
 	
 	else begin
 	seqOut <= 0;
 	sneOut <= 1;
+	eqfOut <= 0;
+	nefOut <= 32'h3F800000;
 	end
 
 	if (busA<=busB) begin
 	sleOut <= 1;
 	sgtOut <= 0;
+	lefOut <= 32'h3F800000;
+	gtfOut <= 0;
 	end
 
 	else begin
 	sleOut <= 0;
 	sgtOut <= 1;
+	lefOut <= 0;
+	gtfOut <= 32'h3F800000;
 	end
 
 	if (busA>=busB) begin
 	sgeOut <= 1;
 	sltOut <= 0;
+	gefOut <= 32'h3F800000;
+	ltfOut <= 0;
 	end
 
 	else begin
 	sgeOut <= 0;
 	sltOut <= 1;
+	gefOut <= 0;
+	ltfOut <= 32'h3F800000;
 	end
 
 	case (ALUctrl)
@@ -209,18 +223,22 @@ module alufpu(clock, regA, regB, res_EX_MEM, res_MEM_WB, ALU_SRC, busA_sel, busB
 	pp30 <= {(fbusA[30]&fbusB[1]), (fbusA[30]&fbusB[2]), (fbusA[30]&fbusB[3]), (fbusA[30]&fbusB[4]), (fbusA[30]&fbusB[5]), (fbusA[30]&fbusB[6]), (fbusA[30]&fbusB[7]), (fbusA[30]&fbusB[8]), (fbusA[30]&fbusB[9]), (fbusA[30]&fbusB[10]), (fbusA[30]&fbusB[11]), (fbusA[30]&fbusB[12]), (fbusA[30]&fbusB[13]), (fbusA[30]&fbusB[14]), (fbusA[30]&fbusB[15]), (fbusA[30]&fbusB[16]), (fbusA[30]&fbusB[17]), (fbusA[30]&fbusB[18]), (fbusA[30]&fbusB[19]), (fbusA[30]&fbusB[20]), (fbusA[30]&fbusB[21]), (fbusA[30]&fbusB[22]), (fbusA[30]&fbusB[23]), (fbusA[30]&fbusB[24]), (fbusA[30]&fbusB[25]), (fbusA[30]&fbusB[26]), (fbusA[30]&fbusB[27]), (fbusA[30]&fbusB[28]), (fbusA[30]&fbusB[29]), (fbusA[30]&fbusB[30]), (fbusA[30]&fbusB[31]), 1'b0};
 	pp31 <= {(fbusA[31]&fbusB[0]), (fbusA[31]&fbusB[1]), (fbusA[31]&fbusB[2]), (fbusA[31]&fbusB[3]), (fbusA[31]&fbusB[4]), (fbusA[31]&fbusB[5]), (fbusA[31]&fbusB[6]), (fbusA[31]&fbusB[7]), (fbusA[31]&fbusB[8]), (fbusA[31]&fbusB[9]), (fbusA[31]&fbusB[10]), (fbusA[31]&fbusB[11]), (fbusA[31]&fbusB[12]), (fbusA[31]&fbusB[13]), (fbusA[31]&fbusB[14]), (fbusA[31]&fbusB[15]), (fbusA[31]&fbusB[16]), (fbusA[31]&fbusB[17]), (fbusA[31]&fbusB[18]), (fbusA[31]&fbusB[19]), (fbusA[31]&fbusB[20]), (fbusA[31]&fbusB[21]), (fbusA[31]&fbusB[22]), (fbusA[31]&fbusB[23]), (fbusA[31]&fbusB[24]), (fbusA[31]&fbusB[25]), (fbusA[31]&fbusB[26]), (fbusA[31]&fbusB[27]), (fbusA[31]&fbusB[28]), (fbusA[31]&fbusB[29]), (fbusA[31]&fbusB[30]), (fbusA[31]&fbusB[31])};
 
-	//multOut <= ((((pp0+pp1)+(pp2+pp3))+((pp4+pp5)+(pp6+pp7)))+(((pp8+pp9)+(pp10+pp11))+((pp12+pp13)+(pp14+pp15))))+((((pp16+pp17)+(pp18+pp19))+((pp20+pp21)+(pp22+pp23)))+(((pp24+pp25)+(pp26+pp27))+((pp28+pp29)+(pp30+pp31))));
-
 
         if (multOut>2147483648)
                 multuOut <= 0 - multOut;
         else
                 multuOut <= multOut;
 
-        if (FPUctrl == 0)
-                FPUout <= multOut;
-        else
-                FPUout <= multuOut;
+		case (FPUctrl)
+		0: FPUout <= eqfOut;
+		1: FPUout <= nefOut;
+		2: FPUout <= ltfOut;
+		3: FPUout <= gtfOut;
+		4: FPUout <= lefOut;
+		5: FPUout <= gefOut;
+		8: FPUout <= multOut;
+		9: FPUout <= multuOut;
+		endcase
 
         fp_branch = 0;
 
