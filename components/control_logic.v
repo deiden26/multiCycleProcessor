@@ -6,7 +6,7 @@ module control_logic(
 	output logic BRANCH,
 	output logic JUMP,
 	output logic [0:3] ALU_CTRL_BITS,
-	output logic FPU_CTRL_BITS,
+	output logic [0:3] FPU_CTRL_BITS,
 	output logic ALU_SRC,
 	output logic IMM_ZERO,
 	output logic MEM_WR,
