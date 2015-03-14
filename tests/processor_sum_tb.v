@@ -44,11 +44,13 @@ module processor_tb();
 	always begin
 		//Clock cycle is 100
 		#100 clock = !clock;
-		if((instr == 32'hac052028 || instr == 32'h8cc42000) && clock ==1)
-			$display("clock = %b \t reset = %b \t iaddr = %x \t instruction = %x \t addr_to_mem = %x \tdata_to_mem =%d \t data_from_mem =%d\n",
-			clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
+		// if((instr == 32'hac052028 || instr == 32'h8cc42000) && clock ==1)
+		// 	$display("clock = %b \t reset = %b \t iaddr = %x \t instruction = %x \t addr_to_mem = %x \tdata_to_mem =%d \t data_from_mem =%d\n",
+		// 	clock, reset, iaddr, instr, addr,data_from_proc, data_from_mem);
 	end
     initial begin
+		// $monitor("instr: %x \t alu out: %d \t bus a sel: %b \t bus b sel %b \t if_branch: %b \t if_gp_branch: %b \t if_branch_offset: %d"
+		// , PROCESSOR.id_instr, PROCESSOR.ex_alu_out, PROCESSOR.ex_op_a_sel, PROCESSOR.ex_op_b_sel, PROCESSOR.if_branch, PROCESSOR.if_gp_branch, PROCESSOR.if_branch_offset);
         // Clear DMEM
         for (i = 0; i < DMEM.SIZE; i = i+1)
             DMEM.mem[i] = 8'h0;
@@ -65,11 +67,9 @@ module processor_tb();
         end
         $readmemh(filename, DMEM.mem);
 
-		//Monitor memory
-		// $monitor("write enable=%b | mem_byte=%b | half word=%b | sign extend=%b | address=%x | data out= %x | data in=%x",
-		// 	write_enable, mem_byte, mem_half_word, sign_extend, addr, data_from_mem, data_from_reg);
-
-		// $monitor("clock = %b \t reset = %b \t iaddr = %x \t instruction = %x", clock, reset, iaddr, instr);
+		$display("Initial memory");
+		for(i=8192; i < 8236; i = i+4)
+			$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
 
 		//Start clock
 
@@ -82,8 +82,14 @@ module processor_tb();
 	end
 
 	always begin
-		if(^instr === 1'bx && reset === 0)
+		if(^instr === 1'bx && reset === 0) begin
+			for (i=0; i<4; i = i+1)
+				#100;
+			$display("Final memory");
+			for(i=8192; i < 8236; i = i+4)
+				$display("%d", {DMEM.mem[i], DMEM.mem[i+1], DMEM.mem[i+2], DMEM.mem[i+3]});
 			$finish;
+		end
 		else
 			#100;
 	end

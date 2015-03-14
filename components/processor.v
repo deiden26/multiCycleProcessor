@@ -61,6 +61,9 @@ module processor(
 		id_instr,id_operand_a, id_operand_b, id_pc_plus_8, id_bus_b, id_f_operand_a, id_f_operand_b, id_jump_offset,
 		//EX stage
 		ex_operand_a, ex_operand_b, ex_f_operand_a, ex_f_operand_b, ex_alu_out, ex_fpu_out, ex_pc_plus_8,ex_bus_b, ex_jump_offset,
+
+		//Forwarding intermediates
+		fwd_ex_operand_a, fwd_ex_operand_b, fwd_ex_bus_b,
 		//MEM stage
 		mem_alu_out, mem_fpu_out, mem_bus_b, mem_f_operand_b, mem_mem_data, mem_operand_a, mem_f_operand_a, mem_pc_plus_8,
 		//WB stage
@@ -160,7 +163,7 @@ module processor(
 
 	/*~~~~~ ID EX Pipe Register ~~~~~*/
 	always @(posedge clock) begin
-		if (reset || ld_stall) begin
+		if (reset | ld_stall) begin
 			ex_operand_a <= 32'b0;
 			ex_operand_b <= 32'b0;
 			ex_bus_b <= 32'b0;
@@ -243,11 +246,44 @@ module processor(
 		end
 	end
 		
+	always@(*)
+	begin
+
+	//add fwd_ex_operand_a, fwd_ex_operand_b, fwd_ex_bus_b
+
+	if(ex_op_a_sel == FWD_FROM_EX_MEM)
+		fwd_ex_operand_a = mem_alu_out;
+	else if(ex_op_a_sel == FWD_FROM_MEM_WB)
+		fwd_ex_operand_a = bus_w;
+	else 
+		fwd_ex_operand_a= ex_operand_a;
+
+	if(ex_alu_src == 1)
+		fwd_ex_operand_b= ex_operand_b;
+	else begin
+		if(ex_op_b_sel == FWD_FROM_EX_MEM)
+			fwd_ex_operand_b = mem_alu_out;
+		else if(ex_op_b_sel == FWD_FROM_MEM_WB)
+			fwd_ex_operand_b = bus_w;
+		else 
+			fwd_ex_operand_b = ex_operand_b;
+	end
+
+
+	if(ex_mem_we == 1) begin
+		if(ex_op_b_sel == FWD_FROM_EX_MEM)
+			fwd_ex_bus_b = mem_alu_out;
+		else if(ex_op_b_sel == FWD_FROM_MEM_WB)
+			fwd_ex_bus_b = wb_alu_out;
+		else 
+			fwd_ex_bus_b = ex_bus_b;
+		end
+	end
 	
 	/*~~~~~ EX Stage ~~~~~*/
 	alufpu ALUFPU(
-		.regA(ex_operand_a),
-		.regB(ex_operand_b),
+		.busA(fwd_ex_operand_a),
+		.busB(fwd_ex_operand_b),
 		.res_EX_MEM(mem_alu_out),
 		.res_MEM_WB(bus_w),
 		.ALU_SRC(ex_alu_src),
@@ -310,9 +346,9 @@ module processor(
 			mem_alu_out <= ex_alu_out;
 			mem_fpu_out <= ex_fpu_out;
 
-			mem_operand_a <= ex_operand_a;
+			mem_operand_a <= fwd_ex_operand_a;
 			mem_f_operand_a <= ex_f_operand_a;
-			mem_bus_b <= ex_bus_b;
+			mem_bus_b <= fwd_ex_bus_b;
 			mem_f_operand_b <= ex_f_operand_b;
 			mem_mem_we <= ex_mem_we;
 			mem_mem_byte <= ex_mem_byte;
@@ -345,7 +381,7 @@ module processor(
 		//Connections to memory
 		.addr_to_mem(addr_to_mem),
 		.data_to_mem(data_to_mem),
-		.write_enable_to_mem(mem_we_to_mem),
+		.write_enable_to_mem(write_enable_to_mem),
 		.byte_to_mem(byte_to_mem),
 		.half_word_to_mem(half_word_to_mem),
 		.sign_extend_to_mem(sign_extend_to_mem),
