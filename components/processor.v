@@ -20,9 +20,9 @@ module processor(
 		//If stage
 		if_branch, if_gp_branch, if_fp_branch, if_jump, if_jump_use_reg, if_stall,
 		//ID stage
-		id_branch, id_jump, id_fpu_ctrl_bits, id_mem_we, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall, id_alu_src, id_reg_we,
+		id_branch, id_jump, id_mem_we, id_mov_instr, id_mem_byte, id_mem_half_word, id_mem_sign_extend, id_jal_instr, id_jump_use_reg, ld_stall, id_alu_src, id_reg_we,
 		//EX stage
-		ex_fpu_ctrl_bits, ex_branch, ex_mem_we, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg, ex_gp_branch, ex_fp_branch, ex_alu_src, ex_reg_we,
+		ex_branch, ex_mem_we, ex_mem_to_reg, ex_mov_instr, ex_mem_byte, ex_mem_half_word, ex_mem_sign_extend, ex_jal_instr, ex_jump, ex_jump_use_reg, ex_gp_branch, ex_fp_branch, ex_alu_src, ex_reg_we,
 		//MEM stage
 		mem_mem_we, mem_mem_byte, mem_mem_half_word, mem_mem_sign_extend, mem_jal_instr, mem_mem_to_reg, mem_mov_instr, mem_reg_we,
 		//WB stage
@@ -40,9 +40,9 @@ module processor(
 	/*~~~~~ 4 Bit Signals  ~~~~~*/
 	logic [0:3]
 		//ID stage
-		id_alu_ctrl_bits,
+		id_alu_ctrl_bits, id_fpu_ctrl_bits,
 		//EX stage
-		ex_alu_ctrl_bits;
+		ex_alu_ctrl_bits, ex_fpu_ctrl_bits;
 
 	/*~~~~~ 5 Bit Signals  ~~~~~*/
 	logic [0:4]
@@ -282,22 +282,18 @@ module processor(
 	
 	/*~~~~~ EX Stage ~~~~~*/
 	alufpu ALUFPU(
+		.clock(clock),
 		.busA(fwd_ex_operand_a),
 		.busB(fwd_ex_operand_b),
-		.res_EX_MEM(mem_alu_out),
-		.res_MEM_WB(bus_w),
-		.ALU_SRC(ex_alu_src),
-		.busA_sel(ex_op_a_sel),
-		.busB_sel(ex_op_b_sel),
 		.ALUctrl(ex_alu_ctrl_bits),
 		.fbusA(ex_f_operand_a),
 		.fbusB(ex_f_operand_b),
 		.FPUctrl(ex_fpu_ctrl_bits),
+		.multStall(mul_stall),
 		.ALUout(ex_alu_out),
 		.FPUout(ex_fpu_out),
 		.gp_branch(ex_gp_branch),
-		.fp_branch(ex_fp_branch),
-		.multStall(mul_stall)
+		.fp_branch(ex_fp_branch)
 	);
 
 	/*~~~~~ EX MEM Pipe Register ~~~~~*/
