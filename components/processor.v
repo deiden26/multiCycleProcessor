@@ -33,16 +33,16 @@ module processor(
 	/*~~~~~ 2 Bit Signals  ~~~~~*/
 	logic [0:1]
 		//ID stage
-		id_op_a_sel, id_op_b_sel,
+		id_op_a_sel, id_op_b_sel,id_fpu_ctrl_bits , 
 		//EX stage
-		ex_op_a_sel, ex_op_b_sel;
+		ex_op_a_sel, ex_op_b_sel, ex_fpu_ctrl_bits;
 
 	/*~~~~~ 4 Bit Signals  ~~~~~*/
 	logic [0:3]
 		//ID stage
-		id_alu_ctrl_bits, id_fpu_ctrl_bits,
+		id_alu_ctrl_bits, 
 		//EX stage
-		ex_alu_ctrl_bits, ex_fpu_ctrl_bits;
+		ex_alu_ctrl_bits;
 
 	/*~~~~~ 5 Bit Signals  ~~~~~*/
 	logic [0:4]
