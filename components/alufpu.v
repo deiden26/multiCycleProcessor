@@ -1,5 +1,5 @@
 module alufpu(clock, busA, busB, ALUctrl, fbusA, fbusB, FPUctrl, multStall, ALUout, FPUout, gp_branch, fp_branch);
-	input [0:31] busA, busB, res_EX_MEM, res_MEM_WB,  fbusA, fbusB;
+	input [0:31] busA, busB, fbusA, fbusB;
 	input [0:3] ALUctrl;
 	input [0:1] FPUctrl;
 	input clock;
