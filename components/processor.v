@@ -245,41 +245,23 @@ module processor(
 			ex_pc_plus_8 <= id_pc_plus_8;
 		end
 	end
+
+	/*~~~~~ Data Forwarding ~~~~~*/
+	forwarder FORWARDER(
+		.op_a_sel(ex_op_a_sel),
+		.op_b_sel(ex_op_b_sel),
+		.alu_src(ex_alu_src),
+		.mem_we(ex_mem_we),
+		.ex_stage_op_a(ex_operand_a),
+		.ex_stage_op_b(ex_operand_b),
+		.ex_stage_bus_b(ex_bus_b),
+		.mem_stage_data(mem_alu_out),
+		.wb_stage_data(bus_w),
+		.fwd_op_a(fwd_ex_operand_a),
+		.fwd_op_b(fwd_ex_operand_b),
+		.fwd_bus_b(fwd_ex_bus_b)
+	);
 		
-	always@(*)
-	begin
-
-	//add fwd_ex_operand_a, fwd_ex_operand_b, fwd_ex_bus_b
-
-	if(ex_op_a_sel == FWD_FROM_EX_MEM)
-		fwd_ex_operand_a = mem_alu_out;
-	else if(ex_op_a_sel == FWD_FROM_MEM_WB)
-		fwd_ex_operand_a = bus_w;
-	else 
-		fwd_ex_operand_a= ex_operand_a;
-
-	if(ex_alu_src == 1)
-		fwd_ex_operand_b= ex_operand_b;
-	else begin
-		if(ex_op_b_sel == FWD_FROM_EX_MEM)
-			fwd_ex_operand_b = mem_alu_out;
-		else if(ex_op_b_sel == FWD_FROM_MEM_WB)
-			fwd_ex_operand_b = bus_w;
-		else 
-			fwd_ex_operand_b = ex_operand_b;
-	end
-
-
-	if(ex_mem_we == 1) begin
-		if(ex_op_b_sel == FWD_FROM_EX_MEM)
-			fwd_ex_bus_b = mem_alu_out;
-		else if(ex_op_b_sel == FWD_FROM_MEM_WB)
-			fwd_ex_bus_b = wb_alu_out;
-		else 
-			fwd_ex_bus_b = ex_bus_b;
-		end
-	end
-	
 	/*~~~~~ EX Stage ~~~~~*/
 	alufpu ALUFPU(
 		.clock(clock),
