@@ -4,6 +4,15 @@ typedef enum logic [1:0] {
 	FWD_FROM_MEM_WB = 2'b10
 } FWD_SEL;
 
+typedef enum logic [4:0] {
+	FPU_MULT = 5'h0e,
+	FPU_MULTU = 5'h16
+} FPU_FUNC;
+
+typedef enum logic [1:0]{
+	FPU_MULT_CTRL = 2'b01,
+	FPU_MULTU_CTRL = 2'b11
+}FPU_CTRL;
 
 typedef enum logic [3:0] {
 	ALU_SLL_CTRL 	= 4'b0000, 
@@ -76,9 +85,11 @@ typedef enum logic [5:0]{
  LB 	=	6'h20,
  LH 	=	6'h21,
  LW 	=	6'h23,
+ LF 	= 	6'h26,
  LBU 	=6'h24,
  LHU 	=6'h25,
  SB 	=	6'h28,
  SH 	=	6'h29,
- SW 	=	6'h2b
+ SW 	=	6'h2b,
+ SF 	= 	6'h2e
 }OPCODE;

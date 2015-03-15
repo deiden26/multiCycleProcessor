@@ -22,7 +22,7 @@ module ID_Stage(
 	output BRANCH,
 	output JUMP,
 	output [0:3] ALU_CTRL_BITS,
-	output [0:3] FPU_CTRL_BITS,
+	output [0:1] FPU_CTRL_BITS,
 	output ALU_SRC,
 	output MEM_WR,
 	output MEM_TO_REG,

@@ -6,7 +6,7 @@ module control_logic(
 	output logic BRANCH,
 	output logic JUMP,
 	output logic [0:3] ALU_CTRL_BITS,
-	output logic [0:3] FPU_CTRL_BITS,
+	output logic [0:1] FPU_CTRL_BITS,
 	output logic ALU_SRC,
 	output logic IMM_ZERO,
 	output logic MEM_WR,
@@ -21,12 +21,14 @@ module control_logic(
 
 logic [0:5] opcode;
 logic [0:5] func;
+logic [0:4] f_func;
 
 
 always @(*) begin
 
 opcode = instruction[0:5];
 func = instruction[26:31];
+f_func = instruction[27:31];
 
 //Set Defaults of 0
 	  REG_DST = 0;
@@ -157,8 +159,22 @@ case(opcode)
 
 
 	FPU_OP: begin //change for fun times laterrrrrrrr
-		REG_DST = 1;
-		F_REG_WR = 1;	
+		
+		case(f_func) 
+
+			FPU_MULT: begin
+				F_REG_WR =1;
+				FPU_CTRL_BITS = FPU_MULT_CTRL;
+			end
+
+			FPU_MULTU: begin
+				F_REG_WR = 1;
+				FPU_CTRL_BITS = FPU_MULTU_CTRL;
+			end
+
+			default: ;
+
+		endcase	//case f_func
 	end//FPU_OP
 
 	J: JUMP = 1;
@@ -374,7 +390,19 @@ case(opcode)
 		MEM_WR = 1;
 		EXT_OP = 1;
 	end //SW
-
+	SF: begin
+		ALU_CTRL_BITS = ALU_ADD_CTRL;
+		ALU_SRC = 1;
+		MEM_WR = 1;
+		EXT_OP = 1;
+	end //SF
+	LF: begin
+		F_REG_WR = 1;
+		ALU_CTRL_BITS = ALU_ADD_CTRL;
+		ALU_SRC = 1;
+		MEM_TO_REG = 1;
+		EXT_OP = 1;
+	end //LF
 	default: ;
 
 endcase //case(opcode)
